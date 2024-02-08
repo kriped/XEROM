@@ -1516,6 +1516,29 @@ DREMPHI1 = feedback.REMPHI1 - input.REMPHI1;
 DFLX1 = feedback.STA_FLX1 - input.STA_FLX1;
 DFLX2 = feedback.STA_FLX2 - input.STA_FLX2;
 
+%Extract only thermal information and convert back to 3D array
+DNJ2PHI2 = zeros(I_MAX,J_MAX,K_MAX);
+for I = 1:I_MAX
+    for J = 1:J_MAX
+        for K = K_MAX
+            DNJ2PHI2(I,J,K) = DNapJphi(CONV(I,J,K)+SHIFT_XYZ);
+        end
+    end
+end
+
+DABS2PHI2DPHI2 = DABS2PHI2./ DFLX2;
+DNapJphiDHI2 = DNJ2PHI2 ./ DFLX2;
+DNUFIS2PHI2 = DNUFIS2PHI2 ./ DFLX2;
+
+DABS2PHI2DPHI2(isinf(DABS2PHI2DPHI2)) = 0;
+DNapJphiDHI2(isinf(DNapJphiDHI2)) = 0;
+DNUFIS2PHI2(isinf(DNUFIS2PHI2)) = 0;
+
+DABS2PHI2DPHI2(isnan(DABS2PHI2DPHI2)) = 0;
+DNapJphiDHI2(isnan(DNapJphiDHI2)) = 0;
+DNUFIS2PHI2(isnan(DNUFIS2PHI2)) = 0;
+
+%clearvars input feedback
 
 %% Load Xerom_data
 load("C:/Users/kriped/Chalmers/Christophe Demaziere - XEROM/Matlab code/1G_HOM_REAL_MAIN_SC/input/ROM_input.mat","gammaI", "gammaX", "lambdaI", "lambdaX","sigmaX","reactor_power");
@@ -1563,6 +1586,7 @@ MOD_EQ_2_scaled= MOD_EQ_scaled(sizey+1:end,:,:);
 MOD_eq_MAT =[MOD_EQ_1_scaled,ZERO; ZERO,MOD_EQ_2_scaled]; % Diagonal matrix containing the solutions to the forward problem
 MOD_UPPER = [MOD_EQ_2_scaled, ZERO ; ZERO, ZERO]; % Costom matrix used in the equations 
 MOD_LOWER = [ZERO, ZERO; MOD_EQ_2_scaled, ZERO]; % Costom matrix used in the equations
+
 
 PHI_bottom = zeros(1,M);
 PHI_top = zeros(1,M);
