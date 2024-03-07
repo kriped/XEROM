@@ -39,9 +39,23 @@ def initialise_global_variables(filename:str):
     with open(filename, "rt") as myfile:
         # read in the string and find the number of radial nodes    
         lines = myfile.readlines() # read in the file as a list of lines
-    no_radial_nodes = int(re.findall(r'QTR.MAP Dimensions . . . . . . .ID      (\d\d)+', ''.join(lines))[0])       
-    no_axial_nodes = int(re.findall(r'(?<=KD\s\s)(\d\d)', ''.join(lines))[0])
-    no_cases = len(set(re.findall(r'Case  [1-9]+', ''.join(lines)))) - 1   
+    try:
+        no_radial_nodes = int(re.findall(r'QTR.MAP Dimensions . . . . . . .ID      (\d\d)+', ''.join(lines))[0])
+    except IndexError:
+        no_radial_nodes = 34
+        print(f"Number of radial nodes not found assuming {no_radial_nodes} radial nodes")
+        pass       
+    try:
+        no_axial_nodes = int(re.findall(r'(?<=KD\s\s)(\d\d)', ''.join(lines))[0])
+    except IndexError:
+        no_axial_nodes = 26
+        print(f"Number of axial nodes not found assuming {no_axial_nodes} axial nodes")
+        pass
+    try:
+        no_cases = len(set(re.findall(r'Case  [1-9]+', ''.join(lines)))) - 1
+    except IndexError:
+        error("No case numbers found")
+
     axial_nodes = range(1, no_axial_nodes + 1) # range of axial nodes with matlab indexing
     radial_nodes = range(1, no_radial_nodes + 1) # range of radial nodes with matlab indexing
     cases = range(1, no_cases + 1) # range of cases with matlab indexing

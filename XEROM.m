@@ -1,5 +1,7 @@
 %%
 clear variables; close all; clc;
+
+
 % %% create sparse CR matrix
 % 
 % CR_SA1 = zeros(size(D1));
@@ -123,17 +125,22 @@ end
 % Loading input variables:
 % D1 D2 REM ABS1 ABS2 NUFIS1 NUFIS2 DX DY DZ
 files={
-    'XS_data.mat'
+    'XS_data_new.mat'
     'GEOM_data.mat'
+    'additional_data_new.mat'
+    'RESULTS.mat'
     };
 for i=1:size(files,1)
-    if exist(sprintf('input/%s',files{i}),'file')==2
-        load (sprintf('input/%s',files{i}))
+    if exist(sprintf('../For_Christophe/input_new/%s',files{i}),'file')==2
+        load (sprintf('../For_Christophe/input_new/%s',files{i}))
+        fprintf("input data /%s loaded \n",files{i})
     else
         fprintf('\nERROR: Missing input file or missing input directory.\nEXECUTION TERMINATED\n')
         return
     end
 end
+
+
 
 VAR={'D1','D2','REM','ABS1','ABS2','NUFIS1','NUFIS2','DX','DY','DZ','STA_FLX1','STA_FLX2','KF1','KF2'};
 TEST_VAR=ismember((VAR),who);
@@ -149,6 +156,7 @@ if RUN_TEST==0
     return
 end
 clear VAR TEST_VAR files
+RUN_CORESIM = 0;
 
 % Checking the geometry of the core
 I_MAX=size(D2,1);
@@ -187,17 +195,8 @@ for I=1:I_MAX
     end
 end
 
-% Checking the consistency of the input data
-VAR={'D1','D2','REM','ABS1','ABS2','NUFIS1','NUFIS2','S1','S2','S1_adj','S2_adj','dREM','dABS1','dABS2','dNUFIS1','dNUFIS2','dS1','dS2','dS1_adj','dS2_adj'};
-TEST_VAR=ismember((VAR),who);
-for i=1:size(VAR,2)
-    if TEST_VAR(1,i)~=0
-        if size(eval(VAR{1,i}),1)~=size(NUFIS2,1) || size(eval(VAR{1,i}),2)~=size(NUFIS2,2) || size(eval(VAR{1,i}),3)~=size(NUFIS2,3)
-            fprintf('\nERROR: The size of the variable %s is not consistent\nwith the size of other input variables.\n',VAR{i});
-            RUN_TEST=0;
-        end
-    end
-end
+
+
 if RUN_TEST==0
     fprintf('\nEXECUTION TERMINATED\n')
     return
@@ -575,59 +574,115 @@ end
 if size(CZ,2)<2*SHIFT_XYZ
     CZ(2*SHIFT_XYZ,2*SHIFT_XYZ)=0;
 end
-save("temp/temp_input_vars.mat","AX","AY","AZ","BX","BY","BZ","CX","CY","CZ","DX","DY","DZ","D1","D2","NUFIS1","NUFIS2","KF1","KF2","ABS1","ABS2","REM","SHIFT_XYZ","SHIFT","SHIFT_XY","I_MAX","J_MAX","K_MAX","TYP","CONV","STA_FLX1","STA_FLX2")
+save("temp/temp_input_vars.mat","AX","AY","AZ","BX","BY","BZ","CX","CY","CZ","DX","DY","DZ","D1","D2","NUFIS1","NUFIS2","ABS1","ABS2","REM","SHIFT_XYZ","SHIFT","SHIFT_XY","I_MAX","J_MAX","K_MAX","TYP","CONV","STA_FLX1","STA_FLX2","KF1","KF2")
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CALCULATING THE EIGENMODES OF THE SOURCE-FREE PROBLEM (FORWARD PROBLEM)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if RUN_CORESIM
+    fprintf('\nCALCULATION OF THE EIGENMODES OF THE SOURCE-FREE PROBLEM (FORWARD PROBLEM) IN PROGRESS.\n')
+    Dp_FLX_tmp=zeros(2*SHIFT_XYZ,3);
+    for I=1:I_MAX
+    	for J=1:J_MAX
+            for K=1:K_MAX
+                if (TYP(I,J,K)~=0)
+                    % Group 1->1
+                    Dp_FLX_tmp(CONV(I,J,K),1)=-ABS1(I,J,K)-REM(I,J,K);
+                    % Group 2->1
+                    Dp_FLX_tmp(CONV(I,J,K)+SHIFT_XYZ,2)=0;
+                    % Group 1->2
+                    Dp_FLX_tmp(CONV(I,J,K),3)=REM(I,J,K);
+                    % Group 2->2
+                    Dp_FLX_tmp(CONV(I,J,K)+SHIFT_XYZ,1)=-ABS2(I,J,K);
+                end
+            end
+    	end
+    end
+    Dp_FLX=spdiags(Dp_FLX_tmp,[0;SHIFT_XYZ;-SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
+    STA=Dp_FLX-AX/DX-AY/DY-AZ/DZ-BX/DX-BY/DY-BZ/DZ-CX/DX-CY/DY-CZ/DZ;
+    clear Dp_FLX Dp_FLX_tmp
 
-fprintf('\nCALCULATION OF THE EIGENMODES OF THE SOURCE-FREE PROBLEM (FORWARD PROBLEM) IN PROGRESS.\n')
-Dp_FLX_tmp=zeros(2*SHIFT_XYZ,3);
-for I=1:I_MAX
-	for J=1:J_MAX
-        for K=1:K_MAX
-            if (TYP(I,J,K)~=0)
-                % Group 1->1
-                Dp_FLX_tmp(CONV(I,J,K),1)=-ABS1(I,J,K)-REM(I,J,K);
-                % Group 2->1
-                Dp_FLX_tmp(CONV(I,J,K)+SHIFT_XYZ,2)=0;
-                % Group 1->2
-                Dp_FLX_tmp(CONV(I,J,K),3)=REM(I,J,K);
-                % Group 2->2
-                Dp_FLX_tmp(CONV(I,J,K)+SHIFT_XYZ,1)=-ABS2(I,J,K);
+    F_tmp=zeros(2*SHIFT_XYZ,2);
+    for I=1:I_MAX
+    	for J=1:J_MAX
+            for K=1:K_MAX
+                if TYP(I,J,K)~=0
+                    % Group 1->1
+                    F_tmp(CONV(I,J,K),1)=-NUFIS1(I,J,K);
+                    % Group 2->1
+                    F_tmp(CONV(I,J,K)+SHIFT_XYZ,2)=-NUFIS2(I,J,K);
+                end
+            end
+    	end
+    end
+    F=spdiags(F_tmp,[0;SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
+    clear F_tmp
+
+    count=0;
+    q_old=ones(2*SHIFT_XYZ,1);
+    q_old=q_old/norm(q_old);
+
+    if EIG_MET==1
+        res=Inf;
+        [L,U,P,Q]=lu(STA);
+        while res>conv_ERAM
+            v=q_old;
+            H=zeros(m,m);
+            for j=1:m
+                w=Q*(U\(L\(P*(F*v(:,j)))));
+                for i=1:j
+                    H(i,j)=w'*v(:,i);
+                    w=w-H(i,j)*v(:,i);
+                end
+                H(j+1,j)=norm(w,2);
+                if H(j+1,j)==0
+                    break
+                else
+                    v(:,j+1)=w/norm(w,2);
+                end
+            end
+            Hr=H(1:(size(H,1)-1),1:size(H,2));
+            [X_H,D_H]=eig(Hr);
+            D_H=diag(D_H);
+            Vr=v(1:size(v,1),1:size(v,2)-1);
+            X=Vr*X_H;
+            [lambda,order]=sort(D_H,'descend');
+            X=X(:,order);
+            for i=1:(m-1)
+                X(:,i)=X(:,i)/norm(X(:,i),2);
+            end
+            res_X=zeros(neigs,1);
+            for i=1:neigs
+                res_X(i)=norm((lambda(i)*STA*X(:,i)-F*X(:,i)),2);
+            end
+            res=norm(res_X,inf);
+            if res>conv_ERAM
+                count=count+1;
+                fprintf('Residuals before restart # %d: %1.3e\n',count,res);
+            else
+                fprintf('Residuals on the converged eigenvectors: %1.3e\n',res);
+            end
+            q_new=zeros(size(X,1),1);
+            for i=1:neigs
+                q_new=q_new+X(:,i).*1;
+            end
+            q_old=q_new;
+            if count>n_restart
+                fprintf('\nERROR: The Explicitely Restarted Arnoldi Method (ERAM) is not converging as expected.\nEither change the parameters of the Explicitely Restarted Arnoldi Method in your SETTINGS.m file\n')
+                fprintf('or switch to the power iteration method (POW)\n(setting EIG_MET=2 in your SETTINGS.m file).\n')
+                if BYP==0
+                    fprintf('EXECUTION TERMINATED\n')
+                    return
+                else
+                    fprintf('EXECUTION ALLOWED TO CONTINUE\n')
+                    break
+                end
             end
         end
-	end
-end
-Dp_FLX=spdiags(Dp_FLX_tmp,[0;SHIFT_XYZ;-SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
-STA=Dp_FLX-AX/DX-AY/DY-AZ/DZ-BX/DX-BY/DY-BZ/DZ-CX/DX-CY/DY-CZ/DZ;
-clear Dp_FLX Dp_FLX_tmp
-
-F_tmp=zeros(2*SHIFT_XYZ,2);
-for I=1:I_MAX
-	for J=1:J_MAX
-        for K=1:K_MAX
-            if TYP(I,J,K)~=0
-                % Group 1->1
-                F_tmp(CONV(I,J,K),1)=-NUFIS1(I,J,K);
-                % Group 2->1
-                F_tmp(CONV(I,J,K)+SHIFT_XYZ,2)=-NUFIS2(I,J,K);
-            end
-        end
-	end
-end
-F=spdiags(F_tmp,[0;SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
-clear F_tmp
-
-count=0;
-q_old=ones(2*SHIFT_XYZ,1);
-q_old=q_old/norm(q_old);
-
-if EIG_MET==1
-    res=Inf;
-    [L,U,P,Q]=lu(STA);
-    while res>conv_ERAM
+        clear L U P Q v w H Hr X_H D_H Vr order q_old q_new count
+    else
+        [L,U,P,Q]=lu(STA);
         v=q_old;
         H=zeros(m,m);
         for j=1:m
@@ -636,7 +691,7 @@ if EIG_MET==1
                 H(i,j)=w'*v(:,i);
                 w=w-H(i,j)*v(:,i);
             end
-                H(j+1,j)=norm(w,2);
+            H(j+1,j)=norm(w,2);
             if H(j+1,j)==0
                 break
             else
@@ -647,69 +702,65 @@ if EIG_MET==1
         [X_H,D_H]=eig(Hr);
         D_H=diag(D_H);
         Vr=v(1:size(v,1),1:size(v,2)-1);
-        X=Vr*X_H;
-        [lambda,order]=sort(D_H,'descend');
-        X=X(:,order);
+        X_est=Vr*X_H;
+        [lambda_est,order]=sort(D_H,'descend');
+        X_est=X_est(:,order);
         for i=1:(m-1)
-            X(:,i)=X(:,i)/norm(X(:,i),2);
+            X_est(:,i)=X_est(:,i)/norm(X_est(:,i),2);
         end
+        clear L U P Q v w H Hr X_H D_H Vr order q_old
+        cwd=pwd;
+        cd(cwd);
+        save TMP
+        clear variables
+        load TMP
+        delete TMP.mat
+        clear cwd
         res_X=zeros(neigs,1);
-        for i=1:neigs
-            res_X(i)=norm((lambda(i)*STA*X(:,i)-F*X(:,i)),2);
-        end
-        res=norm(res_X,inf);
-        if res>conv_ERAM
-            count=count+1;
-            fprintf('Residuals before restart # %d: %1.3e\n',count,res);
-        else
-            fprintf('Residuals on the converged eigenvectors: %1.3e\n',res);
-        end
-        q_new=zeros(size(X,1),1);
-        for i=1:neigs
-            q_new=q_new+X(:,i).*1;
-        end
-        q_old=q_new;
-        if count>n_restart
-            fprintf('\nERROR: The Explicitely Restarted Arnoldi Method (ERAM) is not converging as expected.\nEither change the parameters of the Explicitely Restarted Arnoldi Method in your SETTINGS.m file\n')
-            fprintf('or switch to the power iteration method (POW)\n(setting EIG_MET=2 in your SETTINGS.m file).\n')
-            if BYP==0
-                fprintf('EXECUTION TERMINATED\n')
-                return 
-            else
-                fprintf('EXECUTION ALLOWED TO CONTINUE\n')
-                break
+        lambda=zeros(neigs,1);
+        X=zeros(2*SHIFT_XYZ,neigs);
+        for k=1:neigs
+            count=0;
+            res_X(k)=Inf;
+            fprintf('\nComputing eigenmode # %d\n',k);
+            q_old=X_est(:,k);
+            k_est=lambda_est(k);
+            [L,U,P,Q]=lu(STA-1/k_est*F);
+            while res_X(k)>conv_POW
+                q_new=Q*(U\(L\(P*F*q_old)));
+                q_old=q_new/norm(q_new,2);
+                lambda(k)=((q_old'*Q*(U\(L\(P*(F*q_old)))))^-1+1/k_est)^-1;
+                X(:,k)=q_old;
+                res_X(k)=norm((lambda(k)*STA*X(:,k)-F*X(:,k)),2);
+                if res_X(k)>conv_POW
+                    count=count+1;
+                    if floor(count/10)==count/10
+                        fprintf('Residuals after iteration # %d: %1.3e\n',count,res_X(k));
+                    end
+                else
+                    fprintf('Residuals on the converged eigenvector: %1.3e\n',res_X(k));
+                end
+                if count>n_iter
+                    fprintf('\nERROR: The power iteration method (POW) is not converging as expected.\nEither change the parameters of the power iteration method in your SETTINGS.m file\n')
+                    fprintf('or switch to the Explicitely Restarted Arnoldi Method (ERAM)\n(setting EIG_MET=1 in your SETTINGS.m file).\n')
+                    if BYP==0
+                        fprintf('EXECUTION TERMINATED\n')
+                        return
+                    else
+                        fprintf('EXECUTION ALLOWED TO CONTINUE\n')
+                        break
+                    end
+                end
             end
+            clear L U P Q q_old q_new count
         end
+        clear X_est lambda_est
     end
-    clear L U P Q v w H Hr X_H D_H Vr order q_old q_new count
-else
-    [L,U,P,Q]=lu(STA);
-    v=q_old;
-    H=zeros(m,m);
-    for j=1:m
-        w=Q*(U\(L\(P*(F*v(:,j)))));
-        for i=1:j
-            H(i,j)=w'*v(:,i);
-            w=w-H(i,j)*v(:,i);
-        end
-        H(j+1,j)=norm(w,2);
-        if H(j+1,j)==0
-            break
-        else
-            v(:,j+1)=w/norm(w,2);
-        end
+
+    for k=1:neigs
+        X(:,k)=X(:,k)/max(abs(X(:,k)));
     end
-    Hr=H(1:(size(H,1)-1),1:size(H,2));
-    [X_H,D_H]=eig(Hr);
-    D_H=diag(D_H);
-    Vr=v(1:size(v,1),1:size(v,2)-1);
-    X_est=Vr*X_H;
-    [lambda_est,order]=sort(D_H,'descend');
-    X_est=X_est(:,order);
-    for i=1:(m-1)
-        X_est(:,i)=X_est(:,i)/norm(X_est(:,i),2);
-    end
-    clear L U P Q v w H Hr X_H D_H Vr order q_old
+
     cwd=pwd;
     cd(cwd);
     save TMP
@@ -717,112 +768,116 @@ else
     load TMP
     delete TMP.mat
     clear cwd
-    res_X=zeros(neigs,1);
-    lambda=zeros(neigs,1);
-    X=zeros(2*SHIFT_XYZ,neigs);
-    for k=1:neigs
-        count=0;
-        res_X(k)=Inf;
-        fprintf('\nComputing eigenmode # %d\n',k);
-        q_old=X_est(:,k);
-        k_est=lambda_est(k);
-        [L,U,P,Q]=lu(STA-1/k_est*F);
-        while res_X(k)>conv_POW
-            q_new=Q*(U\(L\(P*F*q_old)));
-            q_old=q_new/norm(q_new,2);
-            lambda(k)=((q_old'*Q*(U\(L\(P*(F*q_old)))))^-1+1/k_est)^-1;
-            X(:,k)=q_old;
-            res_X(k)=norm((lambda(k)*STA*X(:,k)-F*X(:,k)),2);
-            if res_X(k)>conv_POW
-                count=count+1;
-                if floor(count/10)==count/10
-                    fprintf('Residuals after iteration # %d: %1.3e\n',count,res_X(k));
-                end
-            else
-                fprintf('Residuals on the converged eigenvector: %1.3e\n',res_X(k));
-            end
-            if count>n_iter
-                fprintf('\nERROR: The power iteration method (POW) is not converging as expected.\nEither change the parameters of the power iteration method in your SETTINGS.m file\n')
-                fprintf('or switch to the Explicitely Restarted Arnoldi Method (ERAM)\n(setting EIG_MET=1 in your SETTINGS.m file).\n')
-                if BYP==0
-                    fprintf('EXECUTION TERMINATED\n')
-                    return 
-                else
-                    fprintf('EXECUTION ALLOWED TO CONTINUE\n')
-                    break
-                end 
-            end
-        end
-        clear L U P Q q_old q_new count
-    end
-    clear X_est lambda_est
 end
-
-for k=1:neigs
-    X(:,k)=X(:,k)/max(abs(X(:,k)));
-end
-
-cwd=pwd;
-cd(cwd);
-save TMP
-clear variables
-load TMP
-delete TMP.mat
-clear cwd
-
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CALCULATING THE EIGENMODES OF THE SOURCE-FREE PROBLEM (ADJOINT PROBLEM)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if RUN_CORESIM
+    fprintf('\nCALCULATION OF THE EIGENMODES OF THE SOURCE-FREE PROBLEM (ADJOINT PROBLEM) IN PROGRESS.\n')
+    Dp_FLX_adj_tmp=zeros(2*SHIFT_XYZ,3);
+    for I=1:I_MAX
+    	for J=1:J_MAX
+            for K=1:K_MAX
+                if (TYP(I,J,K)~=0)
+                    % Group 1->1
+                    Dp_FLX_adj_tmp(CONV(I,J,K),1)=-ABS1(I,J,K)-REM(I,J,K);
+                    % Group 2->1
+                    Dp_FLX_adj_tmp(CONV(I,J,K)+SHIFT_XYZ,2)=+REM(I,J,K);
+                    % Group 1->2
+                    Dp_FLX_adj_tmp(CONV(I,J,K),3)=0;
+                    % Group 2->2
+                    Dp_FLX_adj_tmp(CONV(I,J,K)+SHIFT_XYZ,1)=-ABS2(I,J,K);
+                end
+            end
+    	end
+    end
+    Dp_FLX_adj=spdiags(Dp_FLX_adj_tmp,[0;SHIFT_XYZ;-SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
+    STA_adj=Dp_FLX_adj-AX/DX-AY/DY-AZ/DZ-BX/DX-BY/DY-BZ/DZ-CX/DX-CY/DY-CZ/DZ;
+    clear Dp_FLX_adj Dp_FLX_adj_tmp
 
-fprintf('\nCALCULATION OF THE EIGENMODES OF THE SOURCE-FREE PROBLEM (ADJOINT PROBLEM) IN PROGRESS.\n')
-Dp_FLX_adj_tmp=zeros(2*SHIFT_XYZ,3);
-for I=1:I_MAX
-	for J=1:J_MAX
-        for K=1:K_MAX
-            if (TYP(I,J,K)~=0)
-                % Group 1->1
-                Dp_FLX_adj_tmp(CONV(I,J,K),1)=-ABS1(I,J,K)-REM(I,J,K);
-                % Group 2->1
-                Dp_FLX_adj_tmp(CONV(I,J,K)+SHIFT_XYZ,2)=+REM(I,J,K);
-                % Group 1->2
-                Dp_FLX_adj_tmp(CONV(I,J,K),3)=0;
-                % Group 2->2
-                Dp_FLX_adj_tmp(CONV(I,J,K)+SHIFT_XYZ,1)=-ABS2(I,J,K);
+    F_adj_tmp=zeros(2*SHIFT_XYZ,2);
+    for I=1:I_MAX
+    	for J=1:J_MAX
+            for K=1:K_MAX
+                if TYP(I,J,K)~=0
+                    % Group 1->1
+                    F_adj_tmp(CONV(I,J,K),1)=-NUFIS1(I,J,K);
+                    F_adj_tmp(CONV(I,J,K)+SHIFT_XYZ,1)=0;
+                    % Group 1->2
+                    F_adj_tmp(CONV(I,J,K),2)=-NUFIS2(I,J,K);
+                end
+            end
+    	end
+    end
+    F_adj=spdiags(F_adj_tmp,[0;-SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
+    clear F_adj_tmp
+
+    count=0;
+    q_old=ones(2*SHIFT_XYZ,1);
+    q_old=q_old/norm(q_old);
+
+    if EIG_MET==1
+        res=Inf;
+        [L,U,P,Q]=lu(STA_adj);
+        while res>conv_ERAM
+            v=q_old;
+            H=zeros(m,m);
+            for j=1:m
+                w=Q*(U\(L\(P*(F_adj*v(:,j)))));
+                for i=1:j
+                    H(i,j)=w'*v(:,i);
+                    w=w-H(i,j)*v(:,i);
+                end
+                H(j+1,j)=norm(w,2);
+                if H(j+1,j)==0
+                    break
+                else
+                    v(:,j+1)=w/norm(w,2);
+                end
+            end
+            Hr=H(1:(size(H,1)-1),1:size(H,2));
+            [X_H,D_H]=eig(Hr);
+            D_H=diag(D_H);
+            Vr=v(1:size(v,1),1:size(v,2)-1);
+            X_adj=Vr*X_H;
+            [lambda_adj,order]=sort(D_H,'descend');
+            X_adj=X_adj(:,order);
+            for i=1:(m-1)
+                X_adj(:,i)=X_adj(:,i)/norm(X_adj(:,i),2);
+            end
+            res_X_adj=zeros(neigs,1);
+            for i=1:neigs
+                res_X_adj(i)=norm((lambda_adj(i)*STA_adj*X_adj(:,i)-F_adj*X_adj(:,i)),2);
+            end
+            res=norm(res_X_adj,inf);
+            if res>conv_ERAM
+                count=count+1;
+                fprintf('Residuals before restart # %d: %1.3e\n',count,res);
+            else
+                fprintf('Residuals on the converged eigenvectors: %1.3e\n',res);
+            end
+            q_new=zeros(size(X_adj,1),1);
+            for i=1:neigs
+                q_new=q_new+X_adj(:,i).*1;
+            end
+            q_old=q_new;
+            if count>n_restart
+                fprintf('\nERROR: The Explicitely Restarted Arnoldi Method (ERAM) is not converging as expected.\nEither change the parameters of the Explicitely Restarted Arnoldi Method in your SETTINGS.m file\n')
+                fprintf('or switch to the power iteration method (POW)\n(setting EIG_MET=2 in your SETTINGS.m file).\n')
+                if BYP==0
+                    fprintf('EXECUTION TERMINATED\n')
+                    return
+                else
+                    fprintf('EXECUTION ALLOWED TO CONTINUE\n')
+                    break
+                end
             end
         end
-	end
-end
-Dp_FLX_adj=spdiags(Dp_FLX_adj_tmp,[0;SHIFT_XYZ;-SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
-STA_adj=Dp_FLX_adj-AX/DX-AY/DY-AZ/DZ-BX/DX-BY/DY-BZ/DZ-CX/DX-CY/DY-CZ/DZ;
-clear Dp_FLX_adj Dp_FLX_adj_tmp
-
-F_adj_tmp=zeros(2*SHIFT_XYZ,2);
-for I=1:I_MAX
-	for J=1:J_MAX
-        for K=1:K_MAX
-            if TYP(I,J,K)~=0
-                % Group 1->1
-                F_adj_tmp(CONV(I,J,K),1)=-NUFIS1(I,J,K);
-                F_adj_tmp(CONV(I,J,K)+SHIFT_XYZ,1)=0;
-                % Group 1->2
-                F_adj_tmp(CONV(I,J,K),2)=-NUFIS2(I,J,K);
-            end
-        end
-	end
-end
-F_adj=spdiags(F_adj_tmp,[0;-SHIFT_XYZ],2*SHIFT_XYZ,2*SHIFT_XYZ);
-clear F_adj_tmp
-
-count=0;
-q_old=ones(2*SHIFT_XYZ,1);
-q_old=q_old/norm(q_old);
-
-if EIG_MET==1
-    res=Inf;
-    [L,U,P,Q]=lu(STA_adj);
-    while res>conv_ERAM
+        clear L U P Q v w H Hr X_H D_H Vr order q_old q_new count
+    else
+        [L,U,P,Q]=lu(STA_adj);
         v=q_old;
         H=zeros(m,m);
         for j=1:m
@@ -831,7 +886,7 @@ if EIG_MET==1
                 H(i,j)=w'*v(:,i);
                 w=w-H(i,j)*v(:,i);
             end
-                H(j+1,j)=norm(w,2);
+            H(j+1,j)=norm(w,2);
             if H(j+1,j)==0
                 break
             else
@@ -842,156 +897,101 @@ if EIG_MET==1
         [X_H,D_H]=eig(Hr);
         D_H=diag(D_H);
         Vr=v(1:size(v,1),1:size(v,2)-1);
-        X_adj=Vr*X_H;
-        [lambda_adj,order]=sort(D_H,'descend');
-        X_adj=X_adj(:,order);
+        X_est=Vr*X_H;
+        [lambda_est,order]=sort(D_H,'descend');
+        X_est=X_est(:,order);
         for i=1:(m-1)
-            X_adj(:,i)=X_adj(:,i)/norm(X_adj(:,i),2);
+            X_est(:,i)=X_est(:,i)/norm(X_est(:,i),2);
         end
+        clear L U P Q v w H Hr X_H D_H Vr order q_old
         res_X_adj=zeros(neigs,1);
-        for i=1:neigs
-            res_X_adj(i)=norm((lambda_adj(i)*STA_adj*X_adj(:,i)-F_adj*X_adj(:,i)),2);
-        end
-        res=norm(res_X_adj,inf);
-        if res>conv_ERAM
-            count=count+1;
-            fprintf('Residuals before restart # %d: %1.3e\n',count,res);
-        else
-            fprintf('Residuals on the converged eigenvectors: %1.3e\n',res);
-        end
-        q_new=zeros(size(X_adj,1),1);
-        for i=1:neigs
-            q_new=q_new+X_adj(:,i).*1;
-        end
-        q_old=q_new;
-        if count>n_restart
-            fprintf('\nERROR: The Explicitely Restarted Arnoldi Method (ERAM) is not converging as expected.\nEither change the parameters of the Explicitely Restarted Arnoldi Method in your SETTINGS.m file\n')
-            fprintf('or switch to the power iteration method (POW)\n(setting EIG_MET=2 in your SETTINGS.m file).\n')
-            if BYP==0
-                fprintf('EXECUTION TERMINATED\n')
-                return 
-            else
-                fprintf('EXECUTION ALLOWED TO CONTINUE\n')
-                break
-            end
-        end
-    end
-    clear L U P Q v w H Hr X_H D_H Vr order q_old q_new count
-else
-    [L,U,P,Q]=lu(STA_adj);
-    v=q_old;
-    H=zeros(m,m);
-    for j=1:m
-        w=Q*(U\(L\(P*(F_adj*v(:,j)))));
-        for i=1:j
-            H(i,j)=w'*v(:,i);
-            w=w-H(i,j)*v(:,i);
-        end
-        H(j+1,j)=norm(w,2);
-        if H(j+1,j)==0
-            break
-        else
-            v(:,j+1)=w/norm(w,2);
-        end
-    end
-    Hr=H(1:(size(H,1)-1),1:size(H,2));
-    [X_H,D_H]=eig(Hr);
-    D_H=diag(D_H);
-    Vr=v(1:size(v,1),1:size(v,2)-1);
-    X_est=Vr*X_H;
-    [lambda_est,order]=sort(D_H,'descend');
-    X_est=X_est(:,order);
-    for i=1:(m-1)
-        X_est(:,i)=X_est(:,i)/norm(X_est(:,i),2);
-    end
-    clear L U P Q v w H Hr X_H D_H Vr order q_old
-    res_X_adj=zeros(neigs,1);
-    lambda_adj=zeros(neigs,1);
-    X_adj=zeros(2*SHIFT_XYZ,1);
-    for k=1:neigs
-        count=0;
-        res_X_adj(k)=Inf;
-        fprintf('\nComputing eigenmode # %d\n',k);
-        q_old=X_est(:,k);
-        k_est=lambda_est(k);
-        [L,U,P,Q]=lu(STA_adj-1/k_est*F_adj);
-        while res_X_adj(k)>conv_POW
-            q_new=Q*(U\(L\(P*F_adj*q_old)));
-            q_old=q_new/norm(q_new,2);
-            lambda_adj(k)=((q_old'*Q*(U\(L\(P*(F_adj*q_old)))))^-1+1/k_est)^-1;
-            X_adj(:,k)=q_old;
-            res_X_adj(k)=norm((lambda_adj(k)*STA_adj*X_adj(:,k)-F_adj*X_adj(:,k)),2);
-            if res_X_adj(k)>conv_POW
-                count=count+1;
-                if floor(count/10)==count/10
-                    fprintf('Residuals after iteration # %d: %1.3e\n',count,res_X_adj(k));
-                end
-            else
-                fprintf('Residuals on the converged eigenvector: %1.3e\n',res_X_adj(k));
-            end
-            if count>n_iter
-                fprintf('\nERROR: The power iteration method (POW) is not converging as expected.\nEither change the parameters of the power iteration method in your SETTINGS.m file\n')
-                fprintf('or switch to the Explicitely Restarted Arnoldi Method (ERAM)\n(setting EIG_MET=1 in your SETTINGS.m file).\n')
-                if BYP==0
-                    fprintf('EXECUTION TERMINATED\n')
-                    return 
+        lambda_adj=zeros(neigs,1);
+        X_adj=zeros(2*SHIFT_XYZ,1);
+        for k=1:neigs
+            count=0;
+            res_X_adj(k)=Inf;
+            fprintf('\nComputing eigenmode # %d\n',k);
+            q_old=X_est(:,k);
+            k_est=lambda_est(k);
+            [L,U,P,Q]=lu(STA_adj-1/k_est*F_adj);
+            while res_X_adj(k)>conv_POW
+                q_new=Q*(U\(L\(P*F_adj*q_old)));
+                q_old=q_new/norm(q_new,2);
+                lambda_adj(k)=((q_old'*Q*(U\(L\(P*(F_adj*q_old)))))^-1+1/k_est)^-1;
+                X_adj(:,k)=q_old;
+                res_X_adj(k)=norm((lambda_adj(k)*STA_adj*X_adj(:,k)-F_adj*X_adj(:,k)),2);
+                if res_X_adj(k)>conv_POW
+                    count=count+1;
+                    if floor(count/10)==count/10
+                        fprintf('Residuals after iteration # %d: %1.3e\n',count,res_X_adj(k));
+                    end
                 else
-                    fprintf('EXECUTION ALLOWED TO CONTINUE\n')
-                    break
-                end 
+                    fprintf('Residuals on the converged eigenvector: %1.3e\n',res_X_adj(k));
+                end
+                if count>n_iter
+                    fprintf('\nERROR: The power iteration method (POW) is not converging as expected.\nEither change the parameters of the power iteration method in your SETTINGS.m file\n')
+                    fprintf('or switch to the Explicitely Restarted Arnoldi Method (ERAM)\n(setting EIG_MET=1 in your SETTINGS.m file).\n')
+                    if BYP==0
+                        fprintf('EXECUTION TERMINATED\n')
+                        return
+                    else
+                        fprintf('EXECUTION ALLOWED TO CONTINUE\n')
+                        break
+                    end
+                end
+            end
+            clear L U P Q q_old q_new count
+        end
+        clear X_est lambda_est
+    end
+
+    for k=1:neigs
+        X_adj(:,k)=X_adj(:,k)/max(abs(X_adj(:,k)));
+    end
+
+    cwd=pwd;
+    cd(cwd);
+    save TMP
+    clear variables
+    load TMP
+    delete TMP.mat
+    clear cwd
+
+    keff=lambda(1);
+    FLX=X(:,1);
+    fprintf('\nSAVING OF THE CALCULATED RESULTS IN PROGRESS.\n')
+    MOD1=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    MOD2=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    MOD1_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    MOD2_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    FLX1=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    FLX2=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    FLX1_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    FLX2_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    EXT_S=0;
+    for I=1:I_MAX
+        for J=1:J_MAX
+            for K=1:K_MAX
+                if TYP(I,J,K)~=0
+                    for n=1:neigs
+                        MOD1(I,J,K,n)=X(CONV(I,J,K),n);
+                        MOD2(I,J,K,n)=X(CONV(I,J,K)+SHIFT_XYZ,n);
+                        MOD1_adj(I,J,K,n)=X_adj(CONV(I,J,K),n);
+                        MOD2_adj(I,J,K,n)=X_adj(CONV(I,J,K)+SHIFT_XYZ,n);
+                        FLX1(I,J,K)=abs(MOD1(I,J,K,1));
+                        FLX2(I,J,K)=abs(MOD2(I,J,K,1));
+                    end
+                end
             end
         end
-        clear L U P Q q_old q_new count
     end
-    clear X_est lambda_est
+    lambda_tmp=lambda;
+    clear lambda
+    lambda=lambda_tmp(1:neigs);
+    clear lambda_tmp
+    save("input\XEROM_input.mat")
+    clearvars
 end
-
-for k=1:neigs
-    X_adj(:,k)=X_adj(:,k)/max(abs(X_adj(:,k)));
-end
-
-cwd=pwd;
-cd(cwd);
-save TMP
-clear variables
-load TMP
-delete TMP.mat
-clear cwd
-
-keff=lambda(1);
-FLX=X(:,1);
-fprintf('\nSAVING OF THE CALCULATED RESULTS IN PROGRESS.\n')
-MOD1=zeros(I_MAX,J_MAX,K_MAX,neigs);
-MOD2=zeros(I_MAX,J_MAX,K_MAX,neigs);
-MOD1_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
-MOD2_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
-FLX1=zeros(I_MAX,J_MAX,K_MAX,neigs);
-FLX2=zeros(I_MAX,J_MAX,K_MAX,neigs);
-FLX1_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
-FLX2_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
-EXT_S=0;
-for I=1:I_MAX
-    for J=1:J_MAX
-        for K=1:K_MAX
-            if TYP(I,J,K)~=0
-                for n=1:neigs
-                    MOD1(I,J,K,n)=X(CONV(I,J,K),n);
-                    MOD2(I,J,K,n)=X(CONV(I,J,K)+SHIFT_XYZ,n);
-                    MOD1_adj(I,J,K,n)=X_adj(CONV(I,J,K),n);
-                    MOD2_adj(I,J,K,n)=X_adj(CONV(I,J,K)+SHIFT_XYZ,n);
-                    FLX1(I,J,K)=abs(MOD1(I,J,K,1));
-                    FLX2(I,J,K)=abs(MOD2(I,J,K,1));
-                end                
-            end
-        end
-    end
-end
-lambda_tmp=lambda;
-clear lambda
-lambda=lambda_tmp(1:neigs);
-clear lambda_tmp
-save("input\XEROM_input.mat")
-clearvars
 %% End of CORE SIM
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1001,27 +1001,41 @@ clearvars
 % Loading input variables:
 % D1 D2 REM ABS1 ABS2 NUFIS1 NUFIS2 DX DY DZ
 files={
-    'XS_data.mat'
+    'XS_data_new.mat'
     'GEOM_data.mat'
+    'additional_data_new.mat'
+    'RESULTS.mat'
     };
+% for i=1:size(files,1)
+%     if exist(sprintf('feedback/%s',files{i}),'file')==2
+%         load (sprintf('feedback/%s',files{i}))
+%         fprintf("feedback data /%s \n",files{i})
+%     else
+%         fprintf('\nERROR: Missing input file or missing input directory.\nEXECUTION TERMINATED\n')
+%         return
+%     end
+% end
 for i=1:size(files,1)
-    if exist(sprintf('feedback/%s',files{i}),'file')==2
-        load (sprintf('feedback/%s',files{i}))
+    if exist(sprintf('../For_Christophe/feedback_new/%s',files{i}),'file')==2
+        load (sprintf('../For_Christophe/feedback_new/%s',files{i}))
+        fprintf("feedback data /%s \n",files{i})
     else
         fprintf('\nERROR: Missing input file or missing input directory.\nEXECUTION TERMINATED\n')
         return
     end
 end
 
+
 VAR={'D1','D2','REM','ABS1','ABS2','NUFIS1','NUFIS2','DX','DY','DZ','STA_FLX1','STA_FLX2','KF1','KF2'};
 TEST_VAR=ismember((VAR),who);
 
 for i=1:size(VAR,2)
-    if TEST_VAR(1,i)==0
+    if TEST_VAR(1,i)==0RERUN
         fprintf('\nERROR: The variable %s is missing from your input files.\n',VAR{i});
         RUN_TEST=0;
     end
 end
+
 % if RUN_TEST==0
 %     fprintf('\nEXECUTION TERMINATED\n')
 %     return
@@ -1065,18 +1079,9 @@ for I=1:I_MAX
     end
 end
 
-% Checking the consistency of the input data
-VAR={'D1','D2','REM','ABS1','ABS2','NUFIS1','NUFIS2','S1','S2','S1_adj','S2_adj','dREM','dABS1','dABS2','dNUFIS1','dNUFIS2','dS1','dS2','dS1_adj','dS2_adj'};
-TEST_VAR=ismember((VAR),who);
-for i=1:size(VAR,2)
-    if TEST_VAR(1,i)~=0
-        if size(eval(VAR{1,i}),1)~=size(NUFIS2,1) || size(eval(VAR{1,i}),2)~=size(NUFIS2,2) || size(eval(VAR{1,i}),3)~=size(NUFIS2,3)
-            fprintf('\nERROR: The size of the variable %s is not consistent\nwith the size of other input variables.\n',VAR{i});
-            RUN_TEST=0;
-            return
-        end
-    end
-end
+
+
+
 % if RUN_TEST==0
 %     fprintf('\nEXECUTION TERMINATED\n')
 %     return
@@ -1457,7 +1462,6 @@ end
 
 save("temp/temp_feedback_vars.mat","AX","AY","AZ","BX","BY","BZ","CX","CY","CZ","DX","DY","DZ","D1","D2","NUFIS1","NUFIS2","KF1","KF2","ABS1","ABS2","REM","STA_FLX1","STA_FLX2")
 
-clearvars
 
 %% load data for delta values
 
@@ -1491,9 +1495,19 @@ for I=1:I_MAX
 	end
 end
 
-input.NapJphi = (input.AX/input.DX+input.AY/input.DY+input.AZ/input.DZ+input.BX/input.DX+input.BY/input.DY+input.BZ/input.DZ+input.CX/input.DX+input.CY/input.DY+input.CZ/input.DZ) * input.STA_FLX_col';
+input.NapJ = (input.AX/input.DX+input.AY/input.DY+input.AZ/input.DZ+input.BX/input.DX+input.BY/input.DY+input.BZ/input.DZ+input.CX/input.DX+input.CY/input.DY+input.CZ/input.DZ) * input.STA_FLX_col';
 
-feedback.NapJphi = (feedback.AX/feedback.DX+feedback.AY/feedback.DY+feedback.AZ/feedback.DZ+feedback.BX/feedback.DX+feedback.BY/feedback.DY+feedback.BZ/feedback.DZ+feedback.CX/feedback.DX+feedback.CY/feedback.DY+feedback.CZ/feedback.DZ) * feedback.STA_FLX_col';
+feedback.NapJ = (feedback.AX/feedback.DX+feedback.AY/feedback.DY+feedback.AZ/feedback.DZ+feedback.BX/feedback.DX+feedback.BY/feedback.DY+feedback.BZ/feedback.DZ+feedback.CX/feedback.DX+feedback.CY/feedback.DY+feedback.CZ/feedback.DZ) * feedback.STA_FLX_col';
+
+for I = 1:I_MAX
+    for J = 1:J_MAX
+        for K = 1:K_MAX
+            input.NJ2(I,J,K) = input.NapJ(CONV(I,J,K)+SHIFT_XYZ);
+            feedback.NJ2(I,J,K) = feedback.NapJ(CONV(I,J,K)+SHIFT_XYZ);
+        end
+    end
+end
+
 
 input.NUFIS1PHI1 = input.NUFIS1.*input.STA_FLX1; 
 input.NUFIS2PHI2 = input.NUFIS2.*input.STA_FLX2; 
@@ -1507,7 +1521,7 @@ feedback.ABS1PHI1 = feedback.ABS1.*feedback.STA_FLX1;
 feedback.ABS2PHI2 = feedback.ABS2.*feedback.STA_FLX2;
 feedback.REMPHI1 = feedback.REM.*feedback.STA_FLX1;
 
-DNapJphi = feedback.NapJphi - input.NapJphi;
+DNapJ = feedback.NapJ - input.NapJ;
 DNUFIS1PHI1 = feedback.NUFIS1PHI1 - input.NUFIS1PHI1;
 DNUFIS2PHI2 = feedback.NUFIS2PHI2 - input.NUFIS2PHI2;  
 DABS1PHI1 = feedback.ABS1PHI1 - input.ABS1PHI1;
@@ -1517,38 +1531,40 @@ DFLX1 = feedback.STA_FLX1 - input.STA_FLX1;
 DFLX2 = feedback.STA_FLX2 - input.STA_FLX2;
 
 %Extract only thermal information and convert back to 3D array
-DNJ2PHI2 = zeros(I_MAX,J_MAX,K_MAX);
+DNJ2 = zeros(I_MAX,J_MAX,K_MAX);
 for I = 1:I_MAX
     for J = 1:J_MAX
-        for K = K_MAX
-            DNJ2PHI2(I,J,K) = DNapJphi(CONV(I,J,K)+SHIFT_XYZ);
+        for K = 1:K_MAX
+            DNJ2(I,J,K) = DNapJ(CONV(I,J,K)+SHIFT_XYZ);
         end
     end
 end
 
 DABS2PHI2DPHI2 = DABS2PHI2./ DFLX2;
-DNapJphiDHI2 = DNJ2PHI2 ./ DFLX2;
+DNapJDPHI2 = DNJ2 ./ DFLX2;
 DNUFIS2PHI2 = DNUFIS2PHI2 ./ DFLX2;
 
 DABS2PHI2DPHI2(isinf(DABS2PHI2DPHI2)) = 0;
-DNapJphiDHI2(isinf(DNapJphiDHI2)) = 0;
+DNapJDPHI2(isinf(DNapJDPHI2)) = 0;
 DNUFIS2PHI2(isinf(DNUFIS2PHI2)) = 0;
 
 DABS2PHI2DPHI2(isnan(DABS2PHI2DPHI2)) = 0;
-DNapJphiDHI2(isnan(DNapJphiDHI2)) = 0;
+DNapJDPHI2(isnan(DNapJDPHI2)) = 0;
 DNUFIS2PHI2(isnan(DNUFIS2PHI2)) = 0;
 
+
+
 %clearvars input feedback
-
+delete temp/temp_input_vars.mat
+delete temp/temp_feedback_vars.mat
 %% Load Xerom_data
-load("C:/Users/kriped/Chalmers/Christophe Demaziere - XEROM/Matlab code/1G_HOM_REAL_MAIN_SC/input/ROM_input.mat","gammaI", "gammaX", "lambdaI", "lambdaX","sigmaX","reactor_power");
-load("input/XEROM_input.mat")
-
+load("../For_Christophe/input_new/XS_data_new.mat")
+load("../For_Christophe/input_new/RESULTS.mat")
 %% Create vectors and matrices
-sizex = I; %number of nodes in the x-direction
-sizey = J; %number of nodes in the y-direction
-sizez = K; %number of nodes in the z-direction
-M=neigs;
+sizex = I_MAX; %number of nodes in the x-direction
+sizey = J_MAX; %number of nodes in the y-direction
+sizez = K_MAX; %number of nodes in the z-direction
+M=10;
 v1 = 2E9; % fast neutron velocity in cm/s
 v2 = 2.2E5; % thermal neutron velocity in cm/s 
 KAPPA = 0.2976e-10; % Guessed value of Kappa (source unknown) same as is used in the 1G homogenous model
@@ -1572,7 +1588,7 @@ F = 1/K_VALUE(1).*[NUFIS1, NUFIS2;ZERO,ZERO]; % Fission matrix
 %D = [-D1,ZERO;ZERO,-D2]; % Diffusion coefficient matrix
 MOD = [MOD1;MOD2]; % vector of solutions to the forward problem
 MOD_adj = [MOD1_adj,MOD2_adj]; % vector of solutions to the adjoint problem
-MOD_EQ = [MOD1(:,:,:,1);MOD2(:,:,:,1)]; % Vector of only the equilibrium neutron flux solution
+MOD_EQ = abs([MOD1(:,:,:,1);MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
 % MOD_EQ_INT = DV * sum(MOD1(:,:,:,1)+MOD2(:,:,:,1),'all');
 % SIGF_PHI_INT_2G=DV*sum(G2_inner_product([SIGF1,SIGF2],MOD_EQ,"vector","vector"),"all")
 bsq =   0.0002 ; % Bsq taken from 2G-HOM model Assumes cylindrical shape of the reactor
@@ -1587,17 +1603,64 @@ MOD_eq_MAT =[MOD_EQ_1_scaled,ZERO; ZERO,MOD_EQ_2_scaled]; % Diagonal matrix cont
 MOD_UPPER = [MOD_EQ_2_scaled, ZERO ; ZERO, ZERO]; % Costom matrix used in the equations 
 MOD_LOWER = [ZERO, ZERO; MOD_EQ_2_scaled, ZERO]; % Costom matrix used in the equations
 %Make matrices of delta values only for termal feedbacks
-DeltaSigma = [ZERO, ZERO; ZERO, -DABS2PHI2DPHI2];
-DeltaF = [ZERO, DNUFIS2PHI2; ZERO, ZERO];
-DeltaNJ = [ZERO, ZERO; ZERO, -DNapJphiDHI2];
-DeltaXS = DeltaSigma+DeltaF+DeltaNJ;
+DeltaXS = [ZERO,1.0*DNUFIS2PHI2; ZERO, -DNapJDPHI2-1.0*DABS2PHI2DPHI2 ];
+intial_AO = (DV*sum(KFIS1(:,:,sizez/2+1:sizez).*MOD_EQ_1_scaled(:,:,sizez/2+1:sizez)+KFIS2(:,:,sizez/2+1:sizez).*MOD_EQ_2_scaled(:,:,sizez/2+1:sizez),'all')-DV*sum(KFIS1(:,:,1:sizez/2).*MOD_EQ_1_scaled(:,:,1:sizez/2)+KFIS2(:,:,1:sizez/2).*MOD_EQ_2_scaled(:,:,1:sizez/2),'all'))/(DV*sum(KFIS1(:,:,:).*MOD_EQ_1_scaled(:,:,:)+KFIS2(:,:,:).*MOD_EQ_2_scaled(:,:,:),'all'));
 
+mat1(:,:) = mean(input.STA_FLX2,3);
+vec1(:) = mean(input.STA_FLX2,[1,2]);
+mat2(:,:) = mean(MOD_EQ_2_scaled,3);
+vec2(:) = mean(MOD_EQ_2_scaled,[1,2]);
+figure(1)
+diff_mat = (mat1-mat2)./mat1;
+surf(diff_mat)
+xlabel("X (nodes)")
+ylabel("Y (Nodes)")
+title("radial thermal relative error(averaged) ((SIM-CS)/SIM)")
+view(2)
+colorbar
+figure(2)
+plot(vec1)
+hold on
+plot(vec2)
+xlabel("Height (nodes)")
+ylabel("Thermal neutron flux (cm^{-2}s^{-1})")
+legend("SIMULATE","CORE SIM")
+figure(3)
+plot((vec1-vec2)./vec1)
+xlabel("Height (Nodes)")
+ylabel("Relative thermal error ((SIM-CS)/SIM)")
+
+
+mat1(:,:) = mean(input.STA_FLX1,3);
+vec1(:) = mean(input.STA_FLX1,[1,2]);
+mat2(:,:) = mean(MOD_EQ_1_scaled,3);
+vec2(:) = mean(MOD_EQ_1_scaled,[1,2]);
+figure(4)
+reldiff_thermal = (STA_FLX2-MOD_EQ_2_scaled)./STA_FLX2;
+diff_mat = mean(reldiff_thermal,3);
+surf(diff_mat)
+xlabel("X (nodes)")
+ylabel("Y (Nodes)")
+title("Radial fast relative error(averaged) ((SIM-CS)/SIM)")
+view(2)
+colorbar
+figure(5)
+plot(vec1)
+hold on
+plot(vec2)
+xlabel("Height (nodes)")
+ylabel("Fast neutron flux (cm^{-2}s^{-1})")
+legend("SIMULATE","CORE SIM")
+figure(6)
+plot((vec1-vec2)./vec1)
+xlabel("Height (Nodes)")
+ylabel("Relative fast error ((SIM-CS)/SIM)")
 
 PHI_bottom = zeros(1,M);
 PHI_top = zeros(1,M);
 for mode = 1:M
-    PHI_bottom(mode) = DV*sum(G2_inner_product([SIGF1(:,:,1:sizey/2),SIGF2(:,:,1:sizey/2)],MOD(:,:,1:sizey/2,mode),"vector","vector"),1:3);
-    PHI_top(mode) = DV*sum(G2_inner_product([SIGF1(:,:,sizey/2+1:end),SIGF2(:,:,sizey/2+1:end)], MOD(:,:,sizey/2+1:end,mode),"vector","vector"),1:3);
+    PHI_bottom(mode) = DV*sum(G2_inner_product([SIGF1(:,:,1:sizez/2),SIGF2(:,:,1:sizez/2)],MOD(:,:,1:sizez/2,mode),"vector","vector"),1:3);
+    PHI_top(mode) = DV*sum(G2_inner_product([SIGF1(:,:,sizez/2+1:end),SIGF2(:,:,sizez/2+1:end)], MOD(:,:,sizez/2+1:end,mode),"vector","vector"),1:3);
 end
 
 %SIG = [ABS1+REM, ZERO ; -REM, ABS2]; % Matrix containing the absorbtion and removal cross sections
@@ -1616,18 +1679,83 @@ Xe_UPPER = [ZERO,X0;ZERO,ZERO]; % Custom matrix used in the equations
 
 
 %% test properties
-
+close all
 Volume = DV * sum(MOD1(:,:,:,1)~=0,'all');
 active_volume = DV * sum(NUFIS1~=0,'all');
-SIGF_PHI = SIGF1.*MOD_EQ_scaled(1:32,:,:)+SIGF2.*MOD_EQ_scaled(33:end,:,:);
-SIGF_PHI_average = DV * sum(SIGF_PHI,'all')/Volume;
-SIGF1_average = DV * sum(SIGF1,'all')/Volume;
-SIGF2_average = DV * sum(SIGF2,'all')/Volume;
-MOD_EQ1_average = DV * sum(MOD_EQ_scaled(1:32,:,:),'all')/Volume;
-MOD_EQ2_average = DV * sum(MOD_EQ_scaled(33:end,:,:),'all')/Volume;
-X0_Average = DV * sum(X0,'all')/Volume;
-I0_Average = DV * sum(I0,'all')/Volume;
-
+SIGF_PHI = SIGF1.*MOD_EQ_scaled(1:sizex,:,:)+SIGF2.*MOD_EQ_scaled(sizex+1:end,:,:);
+SIGF_PHI_average = DV * sum(SIGF_PHI,'all')/active_volume;
+SIGF1_average = DV * sum(SIGF1,'all')/active_volume;
+SIGF2_average = DV * sum(SIGF2,'all')/active_volume;
+MOD_EQ1_average = DV * sum(MOD_EQ_scaled(1:sizex,:,:),'all')/Volume;
+MOD_EQ2_average = DV * sum(MOD_EQ_scaled(sizex+1:end,:,:),'all')/Volume;
+X0_Average = DV * sum(X0,'all')/active_volume;
+I0_Average = DV * sum(I0,'all')/active_volume;
+MOD_EQ2_max = max(MOD_EQ_scaled(sizex+1:end,:,:),[],'all');
+X0_max = max(X0,[],'all');
+I0_max = max(I0,[],'all');
+DSA_average = DV*sum(DABS2PHI2DPHI2,'all')/Volume;
+DSF_average = DV*sum(DABS2PHI2DPHI2,'all')/active_volume;
+DNaJ_average = DV*sum(DNapJDPHI2,'all')/Volume;
+delta_NUFIS1 = feedback.NUFIS1-input.NUFIS1;
+delta_ABS1 = feedback.ABS1 - input.ABS1;
+delta_NUFIS2 = feedback.NUFIS2-input.NUFIS2;
+delta_ABS2 = feedback.ABS2 - input.ABS2;
+delta_REM = feedback.REM - input.REM;
+Deltarho = DV * sum( (delta_NUFIS1-delta_ABS1-delta_REM).*MOD1_adj(:,:,:,1).*MOD1(:,:,:,1) + delta_NUFIS2.*MOD1_adj(:,:,:,1).*MOD2(:,:,:,1)+delta_REM.*MOD2_adj(:,:,:,1).*MOD1(:,:,:,1) - delta_ABS2.*MOD2_adj(:,:,:,1).*MOD2(:,:,:,1),'all') ...
+    / (DV * sum(input.NUFIS1.*MOD1_adj(:,:,:,1).*MOD1(:,:,:,1)+input.NUFIS2.*MOD1_adj(:,:,:,1).*MOD2(:,:,:,1),'all'));
+Deltarho
+keff2_SIM = 1.00143;
+reac1_SIM = 0;
+reac2_SIM = (keff2_SIM-1)/keff2_SIM;
+x = DX*(1:sizex);
+y = DY*(1:sizey);
+z = DZ*(1:sizez);
+[X,Y] = meshgrid(x,y);
+mat_DSA(:,:) = DABS2PHI2DPHI2(:,:,13);
+vec_DSA(:) = DABS2PHI2DPHI2(17,17,:);
+figure()
+surf(X,Y,mat_DSA);
+view(2)
+colorbar
+zlabel('^{\Delta\Sigma_{a,2}\phi_{2}}/_{\Delta\phi_{1}}',"FontSize",20)
+xlabel("X (cm)")
+ylabel("Y (cm)")
+title("Absorption")
+figure()
+plot(vec_DSA);
+xlabel("Height (cm)")
+ylabel('^{\Delta\Sigma_{a,2}\phi_{2}}/_{\Delta\phi_{2}}',"FontSize",20)
+title("Absorption")
+mat_DSF(:,:) = DNUFIS2PHI2(:,:,13);
+vec_DSF(:) = DNUFIS2PHI2(17,17,:);
+figure()
+surf(mat_DSF)
+view(2)
+colorbar
+zlabel('^{\Delta\Sigma_{f,2}\phi_{2}}/_{\Delta\phi_{2}}',"FontSize",20)
+xlabel("X (cm)")
+ylabel("Y (cm)")
+title("Fission")
+figure()
+plot(vec_DSF);
+xlabel("Height (cm)")
+ylabel('^{\Delta\Sigma_{f,2}\phi_{2}}/_{\Delta\phi_{2}}',"FontSize",20)
+title("Fission")
+mat_DNaJ(:,:) = DNapJDPHI2(:,:,13);
+vec_DNaJ(:) = DNapJDPHI2(17,17,:);
+figure()
+surf(mat_DNaJ)
+view(2)
+colorbar
+zlabel('^{\Delta(\nabla J_{2}\phi_{2})}/_{\Delta\phi_{2}}',"FontSize",20)
+xlabel("X (cm)")
+ylabel("Y (cm)")
+title("Leakage")
+figure()
+plot(vec_DNaJ);
+xlabel("Height (cm)")
+ylabel('^{\Delta(\nabla J_{2}\phi_{2})}/_{\Delta\phi_{2}}',"FontSize",20)
+title("Leakage")
 %% clear variables
 %clear NUFIS1 NUFIS2 n_iter n_restart ABS1 ABS2 FLX1 FLX2 EIG_MET D1 D2 MOD1_adj MOD2_adj REM RES_FLX RES_MOD RES_MOD_adj ...
  %   XS KN DX DY DZ conv_ERAM conv_POW lambda lambda_adj gammaI gammaX v1 v2
@@ -1681,32 +1809,55 @@ for m = 1:M
         PHID_PHIUPPER_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHIUPPER_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \bar{X} \Phi_0 \hat{X}^T * F Phi_n >
         PHID_PHILOWER_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHILOWER_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \tilde{X} \Phi_0 \hat{X}^T * F Phi_n >
         PHID_X0_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_X0_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \bar{X} X_0 Phi_n >
-      %  PHID_CR_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_CR_PHI(:,:,:,n),"vector","vector"),"all"); % <Phi^dagger_m | CR Phi_n >
+       %PHID_CR_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_CR_PHI(:,:,:,n),"vector","vector"),"all"); % <Phi^dagger_m | CR Phi_n >
     end
 end
 
 
 LAMBDA = PHID_V_PHI./ PHID_F_PHI; % <Phi^dagger_m |v^-1 Phi_n>/ <Phi^dagger_m |F Phi_m> 
+%clearvars temp*
+%% test magnitudes of terms
+sprintf("Printing eig separation term")
+1./LAMBDA'.*(1./K_VALUE(1)-1./K_VALUE)
+sprintf("printing feedback term")
+1./LAMBDA.*PHID_FB_PHI./PHID_F_PHI
+sprintf("printing diagonal of feedback term")
+diag(1./LAMBDA.*PHID_FB_PHI./PHID_F_PHI)
+C11 = diag(1./LAMBDA.*PHID_FB_PHI./PHID_F_PHI) + 1./LAMBDA'.*(1./K_VALUE(1)-1./K_VALUE)
+sprintf("printing flux xenon term")
+C13 = diag(-1./LAMBDA.*sigmaX.*PHID_PHILOWER_PHI./(PHID_F_PHI.^2).*PHID_PHI)   
+sprintf("Printing Iodine creation term")
+C21 = diag(PHID_GAMMAI_PHI./PHID_PHI)
+sprintf("Printing first xenon absorption term")
+-sigmaX.*PHID_X0_PHI./PHID_PHI
+C31 = diag((PHID_GAMMAX_PHI-sigmaX*PHID_X0_PHI)./PHID_PHI)
+sprintf("Printing second xenon absorption term")
+C33 = diag(-sigmaX.*PHID_PHIUPPER_PHI./PHID_F_PHI)
+FB_spatial = G2_inner_product(MOD_adj(:,:,:,1),temp_FB_PHI(:,:,:,1),"vector","vector");
+analyse_3d_var(FB_spatial,"Feedback")
 save data/tempFile
+%%
 [time_2G,state_values_2G] = ode_Nsolve();
+%%
+%delete data/tempFile.mat
 %toc
 %%
 close all
-figure(1)
-tot_sol_phi = state_values_2G(:,1:3:30);
-phi_point_1(1,:) = MOD1(25,25,17,:);
-temp_spatial_point_1 = tot_sol_phi*phi_point_1';
-plot(time_2G(100:end)/3600, temp_spatial_point_1(100:end))
-ylim([-8E6,8E6])
-xlabel("Time [h]",'Fontsize', 14);
-ylabel("Normalized neutron flux [AU]",'Fontsize', 14);
+% figure(1)
+% tot_sol_phi = state_values_2G(:,1:3:M*3);
+% phi_point_1(1,:) = MOD1(25,25,17,:);
+% temp_spatial_point_1 = tot_sol_phi*phi_point_1';
+% plot(time_2G(1:end)/3600, temp_spatial_point_1(1:end))
+% ylim([-8E6,8E6])
+% xlabel("Time [h]",'Fontsize', 14);
+% ylabel("Normalized neutron flux [AU]",'Fontsize', 14);
 
 figure(2)
 %yyaxis left
-plot(time_2G(200:end)/3600,state_values_2G(200:end,([4 1 9]-1)*3+1))
+plot(time_2G(1:end)/3600,state_values_2G(1:end,([2 1 5]-1)*3+1))
 grid on
-xlim([0 50])
-ylim([-4E9,2E9])
+%xlim([0 150])    
+%ylim([-1E7,3.5E7])
 ylabel("Amplitude [cm^{-2}s^{-1}]",'Fontsize', 22)
 xlabel("Time [h]",'Fontsize', 22)
 legend("First axial harmonic", "Fundamental mode", "Second axial harmonic","Fontsize",22)

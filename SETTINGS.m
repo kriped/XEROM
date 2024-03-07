@@ -69,7 +69,7 @@ BYP=0;
 %%
 % Number of eigenmodes sought for (both for IRAM and POW).
 %
-neigs=10;% (10 as default)
+neigs=5;% (10 as default)
 
 %%
 % Parameters used for the Explicitely Restarted Arnoldi Method (ERAM).
