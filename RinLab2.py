@@ -36,6 +36,9 @@ def initialise_global_variables(filename:str):
     global n_timesteps
     global list_length
     global time_array
+    global read_test_FLX1
+    global Fast_flux_changed
+
     with open(filename, "rt") as myfile:
         # read in the string and find the number of radial nodes    
         lines = myfile.readlines() # read in the file as a list of lines
@@ -66,6 +69,8 @@ def initialise_global_variables(filename:str):
     n_timesteps = int((tf-t0)/dt)
     list_length = int(no_radial_nodes*no_radial_nodes*no_axial_nodes)
     time_array = np.arange(t0,tf+dt,dt)
+    read_test_FLX1 = TRUE
+    Fast_flux_changed = FALSE
             
 # Define globals methods
 
@@ -707,6 +712,15 @@ if __name__ == "__main__":
                     current_z_index = current_variable.get_z_index(line)
                     current_line_data = current_variable.get_nodal_data(line)
                     current_length = len(current_line_data)
+                    if  read_test_FLX1 == FALSE:   
+                        if ((mydict["Case_2_FLX1"][:,17,0] != test_FLX1).any()):
+                                Fast_flux_changed = 1
+                        if Fast_flux_changed:
+                            print("Current case number = " + str(current_case.case_number) +"\n Current variable name = " + current_variable.name +  "\n Line number = " + str(line_number))
+                            error("Fast flux for case 2 has changed")
+                        else:
+                            print("Current case number = " + str(current_case.case_number) +"\n Current variable name = " + current_variable.name + "\n Line number = " + str(line_number))
+                            print("Fast flux for case 2 hasnt changed")
                     if current_x_indices[0] == 0:
                         if current_y_index % 2 == 1:
                             current_variable.data[current_x_indices[-current_length:],current_y_index-1,current_z_index] = [item / current_scaling for item in current_line_data]
@@ -741,6 +755,9 @@ if __name__ == "__main__":
                             if current_z_index == 0: # This is the last line of data for this z index
                                 if current_y_index == no_radial_nodes: # This is the last line of data for the variable
                                     mydict[current_case.case_name+"_"+current_variable.name] = current_variable.data
+                                    if (read_test_FLX1 and current_case.case_number == 2):
+                                        test_FLX1 = mydict["Case_2_FLX1"][:,17,0]
+                                        read_test_FLX1 = FALSE                                                                                                  
                                     Case_search_activate()
                                     search_x_indices = FALSE
                                     search_y_index = FALSE

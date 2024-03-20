@@ -125,14 +125,14 @@ end
 % Loading input variables:
 % D1 D2 REM ABS1 ABS2 NUFIS1 NUFIS2 DX DY DZ
 files={
-    'XS_data_new.mat'
-    'GEOM_data.mat'
-    'additional_data_new.mat'
+    'XS_data_100_50.mat'
+    'GEOM_data_100_50.mat'
+    'additional_data_100_50.mat'
     'RESULTS.mat'
     };
 for i=1:size(files,1)
-    if exist(sprintf('../For_Christophe/input_new/%s',files{i}),'file')==2
-        load (sprintf('../For_Christophe/input_new/%s',files{i}))
+    if exist(sprintf('../For_Christophe/input_100_50/%s',files{i}),'file')==2
+        load (sprintf('../For_Christophe/input_100_50/%s',files{i}))
         fprintf("input data /%s loaded \n",files{i})
     else
         fprintf('\nERROR: Missing input file or missing input directory.\nEXECUTION TERMINATED\n')
@@ -1001,9 +1001,9 @@ end
 % Loading input variables:
 % D1 D2 REM ABS1 ABS2 NUFIS1 NUFIS2 DX DY DZ
 files={
-    'XS_data_new.mat'
-    'GEOM_data.mat'
-    'additional_data_new.mat'
+    'XS_data_100_50.mat'
+    'GEOM_data_100_50.mat'
+    'additional_data_100_50.mat'
     'RESULTS.mat'
     };
 % for i=1:size(files,1)
@@ -1016,8 +1016,8 @@ files={
 %     end
 % end
 for i=1:size(files,1)
-    if exist(sprintf('../For_Christophe/feedback_new/%s',files{i}),'file')==2
-        load (sprintf('../For_Christophe/feedback_new/%s',files{i}))
+    if exist(sprintf('../For_Christophe/feedback_100_50/%s',files{i}),'file')==2
+        load (sprintf('../For_Christophe/feedback_100_50/%s',files{i}))
         fprintf("feedback data /%s \n",files{i})
     else
         fprintf('\nERROR: Missing input file or missing input directory.\nEXECUTION TERMINATED\n')
@@ -1464,9 +1464,15 @@ save("temp/temp_feedback_vars.mat","AX","AY","AZ","BX","BY","BZ","CX","CY","CZ",
 
 
 %% load data for delta values
-
+clearvars
+input_additional=load("../For_Christophe/input_100_50/additional_data_100_50.mat");
 input = load("temp/temp_input_vars.mat");
+feedback_additional = load("../For_Christophe/feedback_100_50/additional_data_100_50.mat");
 feedback = load("temp/temp_feedback_vars.mat");
+input_results = load("../For_Christophe/input_100_50/RESULTS.mat");
+feedback_results = load("../For_Christophe/feedback_100_50/RESULTS.mat");
+DV = input.DX*input.DY*input.DZ;
+
 SHIFT = input.SHIFT;
 SHIFT_XYZ = input.SHIFT_XYZ;
 SHIFT_XY = input.SHIFT_XY;
@@ -1478,6 +1484,37 @@ CONV = input.CONV;
 DX = input.DX;
 DY = input.DY;
 DZ = input.DZ;
+
+sizex = I_MAX; %number of nodes in the x-direction
+sizey = J_MAX; %number of nodes in the y-direction
+sizez = K_MAX; %number of nodes in the z-direction
+
+input.KFIS1 = input.KF1;
+input.KFIS2 = input.KF2;
+feedback.KFIS1 = feedback.KF1;
+feedback.KFIS2 = feedback.KF2;
+input.MOD = [input_results.MOD1;input_results.MOD2]; % vector of solutions to the forward problem
+input.MOD_EQ = abs([input_results.MOD1(:,:,:,1);input_results.MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
+input.KFISINT =  DV*sum(G2_inner_product([input.KFIS1,input.KFIS2],input.MOD_EQ,"vector","vector"),"all");
+input.PS = input_additional.reactor_power*input_results.lambda(1)/input.KFISINT;
+
+feedback.MOD = [feedback_results.MOD1;feedback_results.MOD2]; % vector of solutions to the forward problem
+feedback.MOD_EQ = abs([feedback_results.MOD1(:,:,:,1);feedback_results.MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
+feedback.KFISINT =  DV*sum(G2_inner_product([feedback.KFIS1,feedback.KFIS2],feedback.MOD_EQ,"vector","vector"),"all");
+feedback.PS = feedback_additional.reactor_power*input_results.lambda(1)/input.KFISINT;
+
+input.MOD_EQ_scaled= input.PS*input.MOD_EQ; % Vector of only the equilibrium neutron flux solution scaled by the power
+input.MOD_EQ_1_scaled= input.MOD_EQ_scaled(1:sizey,:,:);
+input.MOD_EQ_2_scaled= input.MOD_EQ_scaled(sizey+1:end,:,:);
+
+feedback.MOD_EQ_scaled= feedback.PS*feedback.MOD_EQ; % Vector of only the equilibrium neutron flux solution scaled by the power
+feedback.MOD_EQ_1_scaled= feedback.MOD_EQ_scaled(1:sizey,:,:);
+feedback.MOD_EQ_2_scaled= feedback.MOD_EQ_scaled(sizey+1:end,:,:);
+
+input.power = DV * sum(input.KF1.*input.MOD_EQ_1_scaled+input.KF2.*input.MOD_EQ_2_scaled,'all');
+feedback.power = DV * sum(feedback.KF1.*feedback.MOD_EQ_1_scaled+feedback.KF2.*feedback.MOD_EQ_2_scaled,'all');
+
+
 STA_FLX_col=zeros(1,SHIFT_XYZ*2);
 
 for I=1:I_MAX
@@ -1485,11 +1522,11 @@ for I=1:I_MAX
         for K=1:K_MAX
             if (TYP(I,J,K)~=0)
                 % Group 1
-                input.STA_FLX_col(CONV(I,J,K)) = input.STA_FLX1(I,J,K);
-                feedback.STA_FLX_col(CONV(I,J,K)) = feedback.STA_FLX1(I,J,K);
+                input.STA_FLX_col(CONV(I,J,K)) = input.MOD_EQ_1_scaled(I,J,K);
+                feedback.STA_FLX_col(CONV(I,J,K)) = feedback.MOD_EQ_1_scaled(I,J,K);
                 % Group 2
-                input.STA_FLX_col(CONV(I,J,K)+SHIFT_XYZ) = input.STA_FLX2(I,J,K);
-                feedback.STA_FLX_col(CONV(I,J,K)+SHIFT_XYZ) = feedback.STA_FLX2(I,J,K);
+                input.STA_FLX_col(CONV(I,J,K)+SHIFT_XYZ) = input.MOD_EQ_2_scaled(I,J,K);
+                feedback.STA_FLX_col(CONV(I,J,K)+SHIFT_XYZ) = feedback.MOD_EQ_2_scaled(I,J,K);
             end
         end
 	end
@@ -1502,24 +1539,26 @@ feedback.NapJ = (feedback.AX/feedback.DX+feedback.AY/feedback.DY+feedback.AZ/fee
 for I = 1:I_MAX
     for J = 1:J_MAX
         for K = 1:K_MAX
+            input.NJ1(I,J,K) = input.NapJ(CONV(I,J,K)+SHIFT_XY);
+            feedback.NJ1(I,J,K) = feedback.NapJ(CONV(I,J,K)+SHIFT_XY);
             input.NJ2(I,J,K) = input.NapJ(CONV(I,J,K)+SHIFT_XYZ);
             feedback.NJ2(I,J,K) = feedback.NapJ(CONV(I,J,K)+SHIFT_XYZ);
         end
     end
 end
 
+input.NUFIS1PHI1 = input.NUFIS1.*input.MOD_EQ_1_scaled; 
+input.NUFIS2PHI2 = input.NUFIS2.*input.MOD_EQ_2_scaled;
+input.ABS1PHI1 = input.ABS1.*input.MOD_EQ_1_scaled;
+input.ABS2PHI2 = input.ABS2.*input.MOD_EQ_2_scaled;
+input.REMPHI1 = input.REM.*input.MOD_EQ_1_scaled;
 
-input.NUFIS1PHI1 = input.NUFIS1.*input.STA_FLX1; 
-input.NUFIS2PHI2 = input.NUFIS2.*input.STA_FLX2; 
-input.ABS1PHI1 = input.ABS1.*input.STA_FLX1;
-input.ABS2PHI2 = input.ABS2.*input.STA_FLX2;
-input.REMPHI1 = input.REM.*input.STA_FLX1;
 
-feedback.NUFIS1PHI1 = feedback.NUFIS1.*feedback.STA_FLX1;
-feedback.NUFIS2PHI2 = feedback.NUFIS2.*feedback.STA_FLX2;
-feedback.ABS1PHI1 = feedback.ABS1.*feedback.STA_FLX1;
-feedback.ABS2PHI2 = feedback.ABS2.*feedback.STA_FLX2;
-feedback.REMPHI1 = feedback.REM.*feedback.STA_FLX1;
+feedback.NUFIS1PHI1 = feedback.NUFIS1.*feedback.MOD_EQ_1_scaled;
+feedback.NUFIS2PHI2 = feedback.NUFIS2.*feedback.MOD_EQ_2_scaled;
+feedback.ABS1PHI1 = feedback.ABS1.*feedback.MOD_EQ_1_scaled;
+feedback.ABS2PHI2 = feedback.ABS2.*feedback.MOD_EQ_2_scaled;
+feedback.REMPHI1 = feedback.REM.*feedback.MOD_EQ_1_scaled;
 
 DNapJ = feedback.NapJ - input.NapJ;
 DNUFIS1PHI1 = feedback.NUFIS1PHI1 - input.NUFIS1PHI1;
@@ -1527,30 +1566,61 @@ DNUFIS2PHI2 = feedback.NUFIS2PHI2 - input.NUFIS2PHI2;
 DABS1PHI1 = feedback.ABS1PHI1 - input.ABS1PHI1;
 DABS2PHI2 = feedback.ABS2PHI2 - input.ABS2PHI2;
 DREMPHI1 = feedback.REMPHI1 - input.REMPHI1;
-DFLX1 = feedback.STA_FLX1 - input.STA_FLX1;
-DFLX2 = feedback.STA_FLX2 - input.STA_FLX2;
+DFLX1 = feedback.MOD_EQ_1_scaled - input.MOD_EQ_1_scaled;
+DFLX2 = feedback.MOD_EQ_2_scaled - input.MOD_EQ_2_scaled;
 
 %Extract only thermal information and convert back to 3D array
+DNJ1 = zeros(I_MAX,J_MAX,K_MAX);
 DNJ2 = zeros(I_MAX,J_MAX,K_MAX);
+
 for I = 1:I_MAX
     for J = 1:J_MAX
         for K = 1:K_MAX
+            DNJ1(I,J,K) = DNapJ(CONV(I,J,K)+SHIFT_XY);
             DNJ2(I,J,K) = DNapJ(CONV(I,J,K)+SHIFT_XYZ);
         end
     end
 end
 
+DABS1PHI1DPHI1 = DABS1PHI1 ./DFLX1;
+DNUFIS1PHI1DPHI1 = DNUFIS1PHI1 ./ DFLX1;
+DNapJ1DPHI1 = DNJ1 ./ DFLX1;
+DREMPHI1DPHI1 = DREMPHI1 ./ DFLX1;
+
 DABS2PHI2DPHI2 = DABS2PHI2./ DFLX2;
 DNapJDPHI2 = DNJ2 ./ DFLX2;
-DNUFIS2PHI2 = DNUFIS2PHI2 ./ DFLX2;
+DNUFIS2PHI2DPHI2 = DNUFIS2PHI2 ./ DFLX2;
+
+DABS1PHI1DPHI1(isinf(DABS1PHI1DPHI1)) = 0;
+DNUFIS1PHI1DPHI1(isinf(DNUFIS1PHI1DPHI1)) = 0;
+DNapJ1DPHI1(isinf(DNapJ1DPHI1)) = 0;
+DREMPHI1DPHI1(isinf(DREMPHI1DPHI1)) = 0;
+
 
 DABS2PHI2DPHI2(isinf(DABS2PHI2DPHI2)) = 0;
 DNapJDPHI2(isinf(DNapJDPHI2)) = 0;
-DNUFIS2PHI2(isinf(DNUFIS2PHI2)) = 0;
+DNUFIS2PHI2DPHI2(isinf(DNUFIS2PHI2DPHI2)) = 0;
+
+DABS1PHI1DPHI1(isnan(DABS1PHI1DPHI1)) = 0;
+DNUFIS1PHI1DPHI1(isnan(DNUFIS1PHI1DPHI1)) = 0;
+DNapJ1DPHI1(isnan(DNapJ1DPHI1)) = 0;
+DREMPHI1DPHI1(isnan(DREMPHI1DPHI1)) = 0;
 
 DABS2PHI2DPHI2(isnan(DABS2PHI2DPHI2)) = 0;
 DNapJDPHI2(isnan(DNapJDPHI2)) = 0;
-DNUFIS2PHI2(isnan(DNUFIS2PHI2)) = 0;
+DNUFIS2PHI2DPHI2(isnan(DNUFIS2PHI2DPHI2)) = 0;
+
+h = DZ:DZ:DZ*sizez;
+
+figure()
+hold on 
+vec1(:) = mean(input.MOD_EQ_1_scaled,[1,2]);
+vec2(:) = mean(feedback.MOD_EQ_1_scaled,[1,2]);
+plot(h,vec1)
+plot(h,vec2)
+xlabel("Height (cm)","FontSize",16)
+ylabel("Fast neutron flux (cm^{-2}s^{-1})","FontSize",16)
+legend("100% fast flux", "50% fast flux","Location","south")
 
 
 
@@ -1558,9 +1628,18 @@ DNUFIS2PHI2(isnan(DNUFIS2PHI2)) = 0;
 delete temp/temp_input_vars.mat
 delete temp/temp_feedback_vars.mat
 %% Load Xerom_data
-load("../For_Christophe/input_new/XS_data_new.mat")
-load("../For_Christophe/input_new/RESULTS.mat")
+load("../For_Christophe/input_100_50/XS_data_100_50.mat")
+load("../For_Christophe/input_100_50/additional_data_100_50.mat")
+load("../For_Christophe/input_100_50/GEOM_data_100_50.mat")
+load("../For_Christophe/input_100_50/RESULTS.mat")
+% load("../For_Christophe/feedback_100_50/XS_data_100_50.mat")
+% load("../For_Christophe/feedback_100_50/additional_data_100_50.mat")
+% load("../For_Christophe/feedback_100_50/GEOM_data_100_50.mat")
+% load("../For_Christophe/feedback_100_50/RESULTS.mat")
+
 %% Create vectors and matrices
+DV = DX*DY*DZ;
+power = input_additional.reactor_power;       
 sizex = I_MAX; %number of nodes in the x-direction
 sizey = J_MAX; %number of nodes in the y-direction
 sizez = K_MAX; %number of nodes in the z-direction
@@ -1570,32 +1649,30 @@ v2 = 2.2E5; % thermal neutron velocity in cm/s
 KAPPA = 0.2976e-10; % Guessed value of Kappa (source unknown) same as is used in the 1G homogenous model
 %FB = 3.08228E-19; % original Feedback coeficient Calculated in mathematica from the one group homogenous model drdp*(Sigma_a + D*B^2)Kappa*Int(Phi_eq,V)*SigmaF
 %FB= 6.9799e-19; % test feedback
-FB = 1.3e-18;
+%FB = 1.3e-18;
 sigmaX = 2.7e-18;
 V_inv = [1/v1, 0 ; 0, 1/v2];
 K_VALUE = lambda; % K values / eigenvalues of the modes
 DV = DX*DY*DZ; % Discreet volume element
 %KN = XS.KN; % kappa / nu
 %NU = kappa./KN; % space dependent nu based on guess of a non space dependent kappa (APPROXIMATION)
-KFIS1 = KF1;
-KFIS2 = KF2;
+KFIS1 = input.KF1;
+KFIS2 = input.KF2;
 SIGF1 = KFIS1./KAPPA; % Fast fission cross section
 SIGF2 = KFIS2./KAPPA; % Thermal fission cross section
 ZERO = zeros(size(NUFIS1)); % zero element matching the size of the reactor
 ONE = ones(size(NUFIS1)); % unit element matching the size of the reactor
 %CR_SA = [CR_SA1,ZERO;ZERO,CR_SA2];
-F = 1/K_VALUE(1).*[NUFIS1, NUFIS2;ZERO,ZERO]; % Fission matrix
+F = 1/K_VALUE(1).*[input.NUFIS1, input.NUFIS2;ZERO,ZERO]; % Fission matrix
 %D = [-D1,ZERO;ZERO,-D2]; % Diffusion coefficient matrix
-MOD = [MOD1;MOD2]; % vector of solutions to the forward problem
-MOD_adj = [MOD1_adj,MOD2_adj]; % vector of solutions to the adjoint problem
-MOD_EQ = abs([MOD1(:,:,:,1);MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
+MOD = [input_results.MOD1;input_results.MOD2]; % vector of solutions to the forward problem
+MOD_adj = [input_results.MOD1_adj,input_results.MOD2_adj]; % vector of solutions to the adjoint problem
+MOD_EQ = abs([input_results.MOD1(:,:,:,1);input_results.MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
 % MOD_EQ_INT = DV * sum(MOD1(:,:,:,1)+MOD2(:,:,:,1),'all');
 % SIGF_PHI_INT_2G=DV*sum(G2_inner_product([SIGF1,SIGF2],MOD_EQ,"vector","vector"),"all")
 bsq =   0.0002 ; % Bsq taken from 2G-HOM model Assumes cylindrical shape of the reactor
 KFISINT =  DV*sum(G2_inner_product([KFIS1,KFIS2],MOD_EQ,"vector","vector"),"all");
-FB1 = 9.75e-19; % Fast feedback coefficient. Calculated using homogenised cross sections and assuming cylindrical geometry
-FB2 = 3.27e-18 ; % Thermal feedback coefficient. Calculated using homogenised cross sections and assuming cylindrical geometry
-PS = reactor_power*K_VALUE(1)/KFISINT;
+PS = power*K_VALUE(1)/KFISINT;
 MOD_EQ_scaled= PS*MOD_EQ; % Vector of only the equilibrium neutron flux solution scaled by the power
 MOD_EQ_1_scaled= MOD_EQ_scaled(1:sizey,:,:);
 MOD_EQ_2_scaled= MOD_EQ_scaled(sizey+1:end,:,:);
@@ -1603,7 +1680,7 @@ MOD_eq_MAT =[MOD_EQ_1_scaled,ZERO; ZERO,MOD_EQ_2_scaled]; % Diagonal matrix cont
 MOD_UPPER = [MOD_EQ_2_scaled, ZERO ; ZERO, ZERO]; % Costom matrix used in the equations 
 MOD_LOWER = [ZERO, ZERO; MOD_EQ_2_scaled, ZERO]; % Costom matrix used in the equations
 %Make matrices of delta values only for termal feedbacks
-DeltaXS = [ZERO,1.0*DNUFIS2PHI2; ZERO, -DNapJDPHI2-1.0*DABS2PHI2DPHI2 ];
+DeltaXS = [DNUFIS1PHI1DPHI1-DREMPHI1DPHI1-DNapJ1DPHI1-DABS1PHI1DPHI1,DNUFIS2PHI2DPHI2; DREMPHI1DPHI1, -DNapJDPHI2-DABS2PHI2DPHI2 ];
 intial_AO = (DV*sum(KFIS1(:,:,sizez/2+1:sizez).*MOD_EQ_1_scaled(:,:,sizez/2+1:sizez)+KFIS2(:,:,sizez/2+1:sizez).*MOD_EQ_2_scaled(:,:,sizez/2+1:sizez),'all')-DV*sum(KFIS1(:,:,1:sizez/2).*MOD_EQ_1_scaled(:,:,1:sizez/2)+KFIS2(:,:,1:sizez/2).*MOD_EQ_2_scaled(:,:,1:sizez/2),'all'))/(DV*sum(KFIS1(:,:,:).*MOD_EQ_1_scaled(:,:,:)+KFIS2(:,:,:).*MOD_EQ_2_scaled(:,:,:),'all'));
 
 mat1(:,:) = mean(input.STA_FLX2,3);
@@ -1703,8 +1780,9 @@ delta_ABS2 = feedback.ABS2 - input.ABS2;
 delta_REM = feedback.REM - input.REM;
 Deltarho = DV * sum( (delta_NUFIS1-delta_ABS1-delta_REM).*MOD1_adj(:,:,:,1).*MOD1(:,:,:,1) + delta_NUFIS2.*MOD1_adj(:,:,:,1).*MOD2(:,:,:,1)+delta_REM.*MOD2_adj(:,:,:,1).*MOD1(:,:,:,1) - delta_ABS2.*MOD2_adj(:,:,:,1).*MOD2(:,:,:,1),'all') ...
     / (DV * sum(input.NUFIS1.*MOD1_adj(:,:,:,1).*MOD1(:,:,:,1)+input.NUFIS2.*MOD1_adj(:,:,:,1).*MOD2(:,:,:,1),'all'));
-Deltarho
-keff2_SIM = 1.00143;
+Deltarho_reduced = DV * sum(  delta_NUFIS2.*MOD1_adj(:,:,:,1).*MOD2(:,:,:,1) - delta_ABS2.*MOD2_adj(:,:,:,1).*MOD2(:,:,:,1),'all') ...
+    / (DV * sum(input.NUFIS1.*MOD1_adj(:,:,:,1).*MOD1(:,:,:,1)+input.NUFIS2.*MOD1_adj(:,:,:,1).*MOD2(:,:,:,1),'all'));
+keff2_SIM = 1.01602;
 reac1_SIM = 0;
 reac2_SIM = (keff2_SIM-1)/keff2_SIM;
 x = DX*(1:sizex);
@@ -1726,8 +1804,8 @@ plot(vec_DSA);
 xlabel("Height (cm)")
 ylabel('^{\Delta\Sigma_{a,2}\phi_{2}}/_{\Delta\phi_{2}}',"FontSize",20)
 title("Absorption")
-mat_DSF(:,:) = DNUFIS2PHI2(:,:,13);
-vec_DSF(:) = DNUFIS2PHI2(17,17,:);
+mat_DSF(:,:) = DNUFIS2PHI2DPHI2(:,:,13);
+vec_DSF(:) = DNUFIS2PHI2DPHI2(17,17,:);
 figure()
 surf(mat_DSF)
 view(2)
@@ -1852,12 +1930,13 @@ close all
 % xlabel("Time [h]",'Fontsize', 14);
 % ylabel("Normalized neutron flux [AU]",'Fontsize', 14);
 
-figure(2)
+figure(1)
 %yyaxis left
-plot(time_2G(1:end)/3600,state_values_2G(1:end,([2 1 5]-1)*3+1))
+plot(time_2G(1:end)/3600,state_values_2G(1:end,([2 1 5]-1)*3+1),"LineWidth",2)
 grid on
+%yticks(-3e9:0.5e9:3e9)
 %xlim([0 150])    
-%ylim([-1E7,3.5E7])
+%ylim([-3.1E9,2.1E9])
 ylabel("Amplitude [cm^{-2}s^{-1}]",'Fontsize', 22)
 xlabel("Time [h]",'Fontsize', 22)
 legend("First axial harmonic", "Fundamental mode", "Second axial harmonic","Fontsize",22)

@@ -1,5 +1,5 @@
 clear variables; clc; close all;
-load("input/intrusive1_Tkorr_caseAconv1.mat")
+load("input/intrusive1_Tkorr_caseAconv50_1.mat")
 
 
 if exist('output','dir')~=7
@@ -27,6 +27,12 @@ NUFIS2 = Case_2_NF2;
 ABS1 = Case_2_SA1;
 ABS2 = Case_2_SA2;
 REM = Case_2_SS12;
+KF1 = Case_2_KF1;
+KF2 = Case_2_KF2;
+X0 = Case_2_XENON;
+I0 = Case_2_IODINE;
+STA_FLX1 = Case_2_FLX1;
+STA_FLX2 = Case_2_FLX2;
 % Replace NaN values with zeroes
 D1(isnan(D1)) = 0;
 D2(isnan(D2)) = 0;
@@ -35,14 +41,13 @@ NUFIS2(isnan(NUFIS2)) = 0;
 ABS1(isnan(ABS1)) = 0;
 ABS2(isnan(ABS2)) = 0;
 REM(isnan(REM)) = 0;
-KF1 = Case_2_KF1;
 KF1(isnan(KF1)) = 0;
-KF2 = Case_2_KF2;
 KF2(isnan(KF2)) = 0;
-STA_FLX1 = Case_2_FLX1;
+X0(isnan(X0)) = 0;
+I0(isnan(I0)) = 0;
 STA_FLX1(isnan(STA_FLX1)) = 0;
-STA_FLX2 = Case_2_FLX2;
 STA_FLX2(isnan(STA_FLX2)) = 0;
+
 reactor_power = 3287.6699E6 * 99.8685/100; % W
 sigmaX = 2.7000e-18; %cm^2
 lambdaI = 2.87e-5; % s^-1
@@ -64,6 +69,8 @@ if REFINE
     STA_FLX2 = repelem(STA_FLX2,2,2,2);
     KF1 = repelem(KF1,2,2,2);
     KF2 = repelem(KF2,2,2,2);
+    X0 = repelem(X0,2,2,2);
+    I0 = repelem(I0,2,2,2);
     DX = DX/2;
     DY = DY/2;
     DZ = DZ/2;
@@ -71,9 +78,9 @@ end
 
 
 
-save("input/XS_data_new.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2")
-save("input/additional_data_new","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
-clear("REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","STA_FLX1","STA_FLX2")
+save("input/XS_data_100_50.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","X0","I0")
+save("input/additional_data_100_50","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
+clear("REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","STA_FLX1","STA_FLX2","reactor_power","X0","I0")
 
 %% Create feedback data
 
@@ -88,8 +95,12 @@ ABS2 = Case_4_SA2;
 REM = Case_4_SS12;
 KF1 = Case_4_KF1;
 KF2 = Case_4_KF2;
+X0 = Case_4_XENON;
+I0 = Case_4_IODINE;
 STA_FLX1 = Case_4_FLX1;
 STA_FLX2 = Case_4_FLX2;
+reactor_power = 3287.6699E6 * 50/100; % W
+
 % Replace NaN values with zeroes
 D1(isnan(D1)) = 0;
 D2(isnan(D2)) = 0;
@@ -100,6 +111,8 @@ ABS2(isnan(ABS2)) = 0;
 REM(isnan(REM)) = 0;
 KF1(isnan(KF1)) = 0;
 KF2(isnan(KF2)) = 0;
+X0(isnan(X0)) = 0;
+I0(isnan(I0)) = 0;
 STA_FLX1(isnan(STA_FLX1)) = 0;
 STA_FLX2(isnan(STA_FLX2)) = 0;
 
@@ -115,15 +128,17 @@ if REFINE
     STA_FLX2 = repelem(STA_FLX2,2,2,2);
     KF1 = repelem(KF1,2,2,2);
     KF2 = repelem(KF2,2,2,2);
+    X0 = repelem(X0,2,2,2);
+    I0 = repelem(I0,2,2,2);
 end
 
-save("feedback/XS_data_new.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2")
-save("feedback/additional_data_new","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
-clear("REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","STA_FLX1","STA_FLX2")
+save("feedback/XS_data_100_50.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","I0","X0")
+save("feedback/additional_data_100_50","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
+clear("REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","STA_FLX1","STA_FLX2","reactor_power")
 
 
-save("input/GEOM_data.mat","DX","DY","DZ")
-save("feedback/GEOM_data.mat","DX","DY","DZ")
+save("input/GEOM_data_100_50.mat","DX","DY","DZ")
+save("feedback/GEOM_data_100_50.mat","DX","DY","DZ")
 clear("DZ","DY","DX")
 
 clear variables
