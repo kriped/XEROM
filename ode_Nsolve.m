@@ -8,7 +8,7 @@ load data/tempFile
 %CR = zeros(M).*(t<=tc) + PHID_CR_PHI.*(t>tc); %control rod step function
 
 f = FunctionGen(M);
-ti=0; tf = 30*3600;
+ti=0; tf = 70*3600;
 tspan = [ti,tf];
 %IC = zeros(1,M*3);
 MinValue = -5.9e+09;

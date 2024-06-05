@@ -1,15 +1,15 @@
 clear variables; clc; close all;
-load("input/intrusive1_Tkorr_caseAconv50_1.mat")
+load("input/intrusive1_Tkorr_caseAconv1.mat")
 
 
-if exist('output','dir')~=7
-    mkdir('output')
+if exist('output_100_95','dir')~=7
+    mkdir('output_100_95')
 end
-if exist('feedback','dir')~=7
-    mkdir('feedback')
+if exist('feedback_100_95','dir')~=7
+    mkdir('feedback_100_95')
 end
-if exist('input','dir')~=7
-    mkdir('input')
+if exist('input_100_95','dir')~=7
+    mkdir('input_100_95')
 end
 
 Assembly_pitch = 21.5036; %cm
@@ -20,7 +20,7 @@ DZ = Node_height;
 
 %%
 D1 = Case_2_D1;
-D1(:,:,1) = Case_1_D1(:,:,1);
+%D1(:,:,1) = Case_1_D1(:,:,1);
 D2 = Case_2_D2;
 NUFIS1 = Case_2_NF1;
 NUFIS2 = Case_2_NF2;
@@ -48,8 +48,8 @@ I0(isnan(I0)) = 0;
 STA_FLX1(isnan(STA_FLX1)) = 0;
 STA_FLX2(isnan(STA_FLX2)) = 0;
 
-reactor_power = 3287.6699E6 * 99.8685/100; % W
-sigmaX = 2.7000e-18; %cm^2
+reactor_power = 3287.6699E6 * 99.9/100; % W
+sigmaX = 1.3000e-18; %cm^2
 lambdaI = 2.87e-5; % s^-1
 lambdaX = 2.09e-5; %s^-1
 gammaI = 0.062; %branching ration iodine
@@ -76,17 +76,17 @@ if REFINE
     DZ = DZ/2;
 end
 
+lambdaI = 1.095*lambdaI;
 
-
-save("input/XS_data_100_50.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","X0","I0")
-save("input/additional_data_100_50","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
+save("input_100_95/XS_data.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","X0","I0")
+save("input_100_95/additional_data.mat","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
 clear("REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","STA_FLX1","STA_FLX2","reactor_power","X0","I0")
 
 %% Create feedback data
 
 %%
 D1 = Case_4_D1;
-D1(:,:,1) = Case_3_D1(:,:,1);
+%D1(:,:,1) = Case_3_D1(:,:,1);
 D2 = Case_4_D2;
 NUFIS1 = Case_4_NF1;
 NUFIS2 = Case_4_NF2;
@@ -99,7 +99,7 @@ X0 = Case_4_XENON;
 I0 = Case_4_IODINE;
 STA_FLX1 = Case_4_FLX1;
 STA_FLX2 = Case_4_FLX2;
-reactor_power = 3287.6699E6 * 50/100; % W
+reactor_power = 3287.6699E6 * 95/100; % W
 
 % Replace NaN values with zeroes
 D1(isnan(D1)) = 0;
@@ -132,13 +132,13 @@ if REFINE
     I0 = repelem(I0,2,2,2);
 end
 
-save("feedback/XS_data_100_50.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","I0","X0")
-save("feedback/additional_data_100_50","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
+save("feedback_100_95/XS_data.mat","REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","I0","X0")
+save("feedback_100_95/additional_data","STA_FLX1","STA_FLX2","reactor_power","gammaX","gammaI","lambdaX","lambdaI","sigmaX")
 clear("REM","ABS2","ABS1","NUFIS2","NUFIS1","D2","D1","KF1","KF2","STA_FLX1","STA_FLX2","reactor_power")
 
 
-save("input/GEOM_data_100_50.mat","DX","DY","DZ")
-save("feedback/GEOM_data_100_50.mat","DX","DY","DZ")
+save("input_100_95/GEOM_data.mat","DX","DY","DZ")
+save("feedback_100_95/GEOM_data.mat","DX","DY","DZ")
 clear("DZ","DY","DX")
 
 clear variables

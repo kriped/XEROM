@@ -3,16 +3,16 @@ function functionlist = FunctionGen(mend)
 strlist = strings(1,mend);
 for m = 1:mend
     %For each m make a new set of 3 equations
-    PhiString = sprintf(['1/LAMBDA(%1$i)*(1/K_VALUE(1)-1/K_VALUE(%1$i))*s((%1$i-1)*3+1)'],m);
-    IodineString=sprintf(['-lambdaI*s((%1$i-1)*3+2)'],m);
-    XenonString = sprintf(['lambdaI*s((%1$i-1)*3+2)' ...
-        '-lambdaX*s((%1$i-1)*3+3)'],m);
+    PhiString = sprintf('1/LAMBDA(%1$i)*(1/K_VALUE(1)-1/K_VALUE(%1$i))*s((%1$i-1)*3+1)',m);
+    IodineString=sprintf('-lambdaI*s((%1$i-1)*3+2)',m);
+    XenonString = sprintf('lambdaI*s((%1$i-1)*3+2)-lambdaX*s((%1$i-1)*3+3)',m);
     for n = 1:mend
         % Add new terms to each phi and xenon eqs for each equation
         newstr_P = sprintf(['+1/LAMBDA(%1$i)*PHID_FB_PHI(%1$i,%2$i)/PHID_F_PHI(%1$i)*s((%2$i-1)*3+1)' ...
-            '-1/LAMBDA(%1$i)*sigmaX*PHID_PHILOWER_PHI(%1$i,%2$i)/(PHID_F_PHI(%1$i)^2)*PHID_PHI(%1$i)*s((%2$i-1)*3+3)'],m,n);
+           '-1/LAMBDA(%1$i)*sigmaX*PHID_PHILOWER_PHI(%1$i,%2$i)/(PHID_F_PHI(%1$i)^2)*PHID_PHI(%1$i)*s((%2$i-1)*3+3)'],m,n);
+        
         PhiString = [PhiString newstr_P];
-        newstr_I = sprintf(['+PHID_GAMMAI_PHI(%1$i,%2$i)*s((%2$i-1)*3+1)/PHID_PHI(%1$i)'],m,n);
+        newstr_I = sprintf('+PHID_GAMMAI_PHI(%1$i,%2$i)*s((%2$i-1)*3+1)/PHID_PHI(%1$i)',m,n);
         IodineString = [IodineString newstr_I];
         newstr_X = sprintf(['+(PHID_GAMMAX_PHI(%1$i,%2$i)-sigmaX*PHID_X0_PHI(%1$i,%2$i))/PHID_PHI(%1$i)*s((%1$i-1)*3+1)' ...
             '-sigmaX*PHID_PHIUPPER_PHI(%1$i,%2$i)/PHID_F_PHI(%1$i)*s((%1$i-1)*3+3)'],m,n);
