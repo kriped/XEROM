@@ -1838,13 +1838,16 @@ load("input_100_95/RESULTS.mat")
 % load("../For_Christophe/feedback_100_50/RESULTS.mat")
 
 %% Create vectors and matrices
-DV = DX*DY*DZ;
+MOD1 = MOD1(:,:,:,[1,2,3,4,7]);
+MOD2 = MOD2(:,:,:,[1,2,3,4,7]);
+MOD1_adj = MOD1_adj(:,:,:,[1,2,3,4,7]);
+MOD2_adj = MOD2_adj(:,:,:,[1,2,3,4,7]);
 power = input_additional.reactor_power; 
 keff = input_results.keff;
 sizex = I_MAX; %number of nodes in the x-direction
 sizey = J_MAX; %number of nodes in the y-direction
 sizez = K_MAX; %number of nodes in the z-direction
-M=10;
+M=5;
 v1 = 2E9; % fast neutron velocity in cm/s
 v2 = 2.2E5; % thermal neutron velocity in cm/s 
 KAPPA = 0.2976e-10; % Guessed value of Kappa (source unknown) same as is used in the 1G homogenous model
@@ -1857,7 +1860,7 @@ sigmaX = 1.3e-18;
 %sigmaX2 = 2.778E6*1E-24;
 
 V_inv = [1/v1, 0 ; 0, 1/v2];
-K_VALUE = lambda; % K values / eigenvalues of the modes
+K_VALUE = lambda([1,2,3,4,7]); % K values / eigenvalues of the modes
 DV = DX*DY*DZ; % Discreet volume element
 %KN = XS.KN; % kappa / nu
 %NU = kappa./KN; % space dependent nu based on guess of a non space dependent kappa (APPROXIMATION)
@@ -1877,8 +1880,8 @@ MOD_EQ = abs([input_results.MOD1(:,:,:,1);input_results.MOD2(:,:,:,1)]); % Vecto
 % SIGF_PHI_INT_2G=DV*sum(G2_inner_product([SIGF1,SIGF2],MOD_EQ,"vector","vector"),"all")
 KFISINT =  DV*1/keff*sum(G2_inner_product([KFIS1,KFIS2],MOD_EQ,"vector","vector"),"all");
 PS = power*keff/KFISINT;
-MOD_EQ_scaled = [input.STA_FLX1;input.STA_FLX2];
-%MOD_EQ_scaled= PS*MOD_EQ; % Vector of only the equilibrium neutron flux solution scaled by the power
+%MOD_EQ_scaled = [input.STA_FLX1;input.STA_FLX2];
+MOD_EQ_scaled= PS*MOD_EQ; % Vector of only the equilibrium neutron flux solution scaled by the power
 MOD_EQ_1_scaled= MOD_EQ_scaled(1:sizey,:,:);
 MOD_EQ_2_scaled= MOD_EQ_scaled(sizey+1:end,:,:);
 MOD_eq_MAT =[MOD_EQ_1_scaled,ZERO; ZERO,MOD_EQ_2_scaled]; % Diagonal matrix containing the solutions to the forward problem
@@ -1898,9 +1901,12 @@ MOD_LOWER = [ZERO, ZERO; MOD_EQ_2_scaled, ZERO]; % Costom matrix used in the equ
 % label = "ABS fb removed";
 % file_label = "ABS_FB_rem";
 
-% No removal of feedback cross sections
-%DeltaXS = [(DNUFIS1PHI1DPHI1-DREMPHI1DPHI1-DNapJ1DPHI1-DABS1PHI1DPHI1)*1.0,DNUFIS2PHI2DPHI2; DREMPHI1DPHI1, -DNapJDPHI2-DABS2PHI2DPHI2 ];
-DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS-DABS1PHI1DPHI1_CS)*1.0,DNUFIS2PHI2DPHI2_CS; DREMPHI1DPHI1_CS, -DNapJDPHI2_CS-DABS2PHI2DPHI2_CS ];
+
+
+%Original feedback matrix
+%DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS-DABS1PHI1DPHI1_CS)*1.0,DNUFIS2PHI2DPHI2_CS; DREMPHI1DPHI1_CS, -DNapJDPHI2_CS-DABS2PHI2DPHI2_CS ];
+%save("HET_Feedback","DeltaXS_CS");
+DeltaXS_CS = [ -0.0187, 0.1482; 0.0138,-0.1135];
 label = "no fb removed";
 file_label = "no_FB_rem";
 
@@ -2023,8 +2029,8 @@ Xe_UPPER = [ZERO,X0;ZERO,ZERO]; % Custom matrix used in the equations
 
 %% test properties
 % close all
-% Volume = DV * sum(MOD1(:,:,:,1)~=0,'all');
-% active_volume = DV * sum(NUFIS1~=0,'all');
+Volume = DV * sum(MOD1(:,:,:,1)~=0,'all');
+active_volume = DV * sum(NUFIS1~=0,'all');
 % SIGF_PHI = SIGF1.*MOD_EQ_scaled(1:sizex,:,:)+SIGF2.*MOD_EQ_scaled(sizex+1:end,:,:);
 % SIGF_PHI_average = DV * sum(SIGF_PHI,'all')/active_volume;
 % SIGF1_average = DV * sum(SIGF1,'all')/active_volume;
@@ -2036,9 +2042,13 @@ Xe_UPPER = [ZERO,X0;ZERO,ZERO]; % Custom matrix used in the equations
 % MOD_EQ2_max = max(MOD_EQ_scaled(sizex+1:end,:,:),[],'all');
 % X0_max = max(X0,[],'all');
 % I0_max = max(I0,[],'all');
-% DSA_average = DV*sum(DABS2PHI2DPHI2,'all')/Volume;
-% DSF_average = DV*sum(DABS2PHI2DPHI2,'all')/active_volume;
-% DNaJ_average = DV*sum(DNapJDPHI2,'all')/Volume;
+DSA1_average = DV*sum(DABS1PHI1DPHI1_CS,'all')/Volume
+DSF1_average = DV*sum(DNUFIS1PHI1DPHI1_CS,'all')/active_volume
+DNaJ1_average = DV*sum( DNapJ1DPHI1_CS,'all')/Volume
+DREM_average = DV*sum(DREMPHI1DPHI1_CS,'all')/Volume
+DSA2_average = DV*sum(DABS2PHI2DPHI2_CS,'all')/Volume
+DSF2_average = DV*sum(DNUFIS2PHI2DPHI2_CS,'all')/active_volume
+DNaJ2_average = DV*sum(DNapJDPHI2_CS,'all')/Volume
 % delta_NUFIS1 = feedback.NUFIS1-input.NUFIS1;
 % delta_ABS1 = feedback.ABS1 - input.ABS1;
 % delta_NUFIS2 = feedback.NUFIS2-input.NUFIS2;
@@ -2114,7 +2124,6 @@ PHID_FB_PHI_CS = zeros(M);
 PHID_PHIUPPER_PHI=zeros(M);
 PHID_PHILOWER_PHI=zeros(M);
 PHID_X0_PHI=zeros(M);
-%PHID_CR_PHI = zeros(M);
 
 temp_GAMMAX_PHI = zeros(sizex*2,sizey,sizez,M);
 temp_GAMMAI_PHI = zeros(sizex*2,sizey,sizez,M);
@@ -2132,13 +2141,13 @@ for n = 1:M
     temp_F_PHI(:,:,:,n)=G2_inner_product(F(:,:,:),MOD(:,:,:,n),"matrix","vector"); % | F* Phi_n>
     %temp_PHI_eq_mat_PHI(:,:,:,n) = G2_inner_product(MOD_eq_MAT,MOD(:,:,:,n),"matrix","vector"); %|Phi_0_mat * Phi_n>
     %temp_FB_PHI(:,:,:,n) = G2_inner_product(DeltaXS,MOD(:,:,:,n),'matrix','vector'); % | FB *Phi_n>
-    temp_FB_PHI(:,:,:,n) = G2_inner_product(DeltaXS_CS,MOD(:,:,:,n),'matrix','vector'); % | FB *Phi_n>
+    %temp_FB_PHI(:,:,:,n) = G2_inner_product(DeltaXS_CS,MOD(:,:,:,n),'matrix','vector'); % | FB *Phi_n>
+    temp_FB_PHI(:,:,:,n) = [DeltaXS_CS(1,1)*MOD1(:,:,:,n)+DeltaXS_CS(1,2)*MOD2(:,:,:,n);DeltaXS_CS(2,1)*MOD1(:,:,:,n)+DeltaXS_CS(2,2)*MOD2(:,:,:,n)]; % | FB *Phi_n>
     temp_GAMMAX_PHI(:,:,:,n) = G2_inner_product(GAMMAX,MOD(:,:,:,n),"matrix","vector"); %  |1/k_0 *Gamma_X * Phi_n>
     temp_GAMMAI_PHI(:,:,:,n) = G2_inner_product(GAMMAI,MOD(:,:,:,n),"matrix","vector"); % | 1/k_0 Gamma_I * Phi_n>
     temp_PHIUPPER_PHI(:,:,:,n) = G2_inner_product(MOD_UPPER,temp_F_PHI(:,:,:,n),"matrix","vector"); % | \bar{X} \Phi_0 \hat{X}^T * F* Phi_n >
     temp_PHILOWER_PHI(:,:,:,n) = G2_inner_product(MOD_LOWER,temp_F_PHI(:,:,:,n),"matrix","vector"); % | \tilde{X} \Phi_0 \hat{X}^T * F* Phi_n >
     temp_X0_PHI(:,:,:,n) = G2_inner_product(Xe_UPPER,MOD(:,:,:,n),"matrix","vector"); % |\bar{X} * X0 * Phi_n >
-    %temp_CR_PHI(:,:,:,n) = G2_inner_product(CR_SA,MOD(:,:,:,n),"matrix","vector"); % CP
 end
 
 %% Calculate bra-kets 
@@ -2168,25 +2177,52 @@ for m = 1:M
         PHID_PHIUPPER_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHIUPPER_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \bar{X} \Phi_0 \hat{X}^T * F Phi_n >
         PHID_PHILOWER_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHILOWER_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \tilde{X} \Phi_0 \hat{X}^T * F Phi_n >
         PHID_X0_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_X0_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \bar{X} X_0 Phi_n >
-       %PHID_CR_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_CR_PHI(:,:,:,n),"vector","vector"),"all"); % <Phi^dagger_m | CR Phi_n >
     end
 end
 
 
 LAMBDA = PHID_V_PHI./ PHID_F_PHI; % <Phi^dagger_m |v^-1 Phi_n>/ <Phi^dagger_m |F Phi_m> 
 
-% %% investiate feedback terms
+%% investiate feedback terms
 % 
-%     mode = 1;
-%     var = G2_inner_product(MOD_adj(:,:,:,mode),temp_FB_PHI(:,:,:,mode),"vector","vector");
-%     % var_CS = G2_inner_product(MOD_adj(:,:,:,mode),temp_FB_PHI_CS(:,:,:,mode),"vector","vector");
-%     Width = DX*sizex;
-%     Height = DZ*sizez;
-%     x = linspace(0,Width,sizex);
-%     y = linspace(0,Width,sizey);
-%     z = linspace(0,Height,sizez);
-%     [X,Y] = meshgrid(x,y);
-% 
+     modes = [1,2,3,4,5];
+     var = zeros(sizez,length(modes));
+     var_plane = zeros(sizex,sizey,length(modes));
+     var2_line = zeros(sizey,length(modes));
+     for mode = 1:numel(modes)
+        var(:,mode) = mean(MOD1(:,:,:,modes(mode)),[1,2]);
+        var_full(:,:,:) = MOD1(:,:,:,modes(mode));
+        var_plane(:,:,mode) = mean(var_full,3);
+        var2_line(:,mode) = var_plane(:,sizex/2,mode);
+     end
+     %var = G2_inner_product(MOD_adj(:,:,:,mode),temp_FB_PHI(:,:,:,mode),"vector","vector");
+%    % var_CS = G2_inner_product(MOD_adj(:,:,:,mode),temp_FB_PHI_CS(:,:,:,mode),"vector","vector");
+     Width = DX*sizex;
+     Height = DZ*sizez;
+     x = linspace(0,Width,sizex);
+     y = linspace(0,Width,sizey);
+     z = linspace(0,Height,sizez);
+     [X,Y] = meshgrid(x,y);
+     figure()
+     plot(z,var,"LineWidth",2,"LineStyle","-")
+     xlabel("Height (cm)","FontSize",16)
+     ylabel("Amplitude (A.U.)","FontSize",16)
+     legend(["Mode 1", "Mode 2", "Mode 3", "Mode 4", "Mode 5"],"FontSize",16,Location = "BestOutside" )
+     figure()
+     plot(x,var2_line,"LineWidth",2,"LineStyle","-")
+     %ylim("padded")
+     xlabel("X (cm)","FontSize",16)
+     ylabel("Amplitude (A.U.)","FontSize",16)
+     legend(["Mode 1", "Mode 2", "Mode 3", "Mode 4", "Mode 5"],"FontSize",16,Location = "BestOutside" )
+     % 
+     % zMiddle = var_plane(:, middleX,4);
+     % xmiddle = repmat(x(sizex/2),size(y));
+     % surf(X,Y,var_plane(:,:,4),"EdgeColor","None")
+     % view(2)
+     % hold on
+     % plot3(xmiddle, y, zMiddle, 'r', 'LineWidth', 2);  % 'r' sets the color to red, and 'LineWidth' sets the line width
+     % xlabel("X [cm]")
+     % ylabel("Y (cm)")
 %     vec_cl(:) = var(ceil(sizex/2),ceil(sizey/2),:);
 %     vec_oc(:) = var(25,ceil(sizey/2),:);
 %     var(var == 0) = NaN;
@@ -2311,11 +2347,11 @@ close all
 
 time_int = figure('Position', get(0, 'Screensize'));
 %yyaxis left
-plot(time_2G(1:end)/3600,state_values_2G(1:end,([2 1 7]-1)*3+1),"LineWidth",2,"LineStyle","-.")
+plot(time_2G(1:end)/3600,state_values_2G(1:end,([2 1 5]-1)*3+1),"LineWidth",2,"LineStyle","-.")
 grid on
 %yticks(-3e9:0.5e9:3e9)
 xlim([0 70])    
-ylim([-1E9 1E9])
+ylim([-4E8 6E8])
 ylabel("Amplitude [cm^{-2}s^{-1}]",'Fontsize', 22)
 xlabel("Time [h]",'Fontsize', 22)
 legend("First axial harmonic", "Fundamental mode", "Second axial harmonic","Fontsize",22,"location","best")

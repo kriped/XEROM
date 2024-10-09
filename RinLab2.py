@@ -642,15 +642,25 @@ if __name__ == "__main__":
     for line in lines:
         line_number += 1
         check_output_summary(line)
+        if  read_test_FLX1 == FALSE:   
+            if ((mydict["Case_2_FLX1"][:,17,0] != test_FLX1).any()):
+                    Fast_flux_changed = 1
+            if Fast_flux_changed:
+                print("Current case number = " + str(current_case.case_number) +"\n Current variable name = " + current_variable.name +  "\n Line number = " + str(line_number))
+                error("Fast flux for case 2 has changed")
+            #else:
+                #print("Current case number = " + str(current_case.case_number) +"\n Current variable name = " + current_variable.name + "\n Line number = " + str(line_number))
+                #print("Fast flux for case 2 hasnt changed")
         if search_case: #When search_case is true the search for the case number is active
             if case_line_identifier(line):
                 current_case_number = get_case_number(line)
                 current_case = Case(current_case_number)
                 current_step_number = get_step_number(line)
-                current_time = get_time(line) 
-                Variable_search_activate()   
+                current_time = get_time(line)
+                if (re.search(r"PRI.MAC\s+-\s+Cross section",lines[line_number+1]) or re.search(r"PRI.STA \w+\s+-\s+NODAL 3D",lines[line_number+1])):
+                    Variable_search_activate()   
                 continue
-        if (re.search(r"PRI.MAC\s+-\s+Cross section",line) and search_case == FALSE): #This search should get the cross sections in XY plane
+        elif (re.search(r"PRI.MAC\s+-\s+Cross section",line) and search_case == FALSE): #This search should get the cross sections in XY plane
             for variable in current_case.get_XY_Nodal_Values_name_list():
                 if variable_line_identifier(line,variable): # Figure out which variable is being loaded
                     current_variable = eval("current_case."+variable)
@@ -659,7 +669,7 @@ if __name__ == "__main__":
                     Indices_search_activate() #When search_indices is true the x indices will be loaded.
                     break # End loop through variables when variable is found
             continue
-        if (re.search(r"PRI.STA \w+\s+-\s+NODAL 3D",line) and search_case == FALSE):
+        elif (re.search(r"PRI.STA \w+\s+-\s+NODAL 3D",line) and search_case == FALSE):
             for variable_match in current_case.get_XZ_variable_match_list(): # Figure out which variable is being loaded
                 if variable_line_identifier(line,variable_match):
                     #Get the index of the match in the list of variable matches
@@ -669,7 +679,7 @@ if __name__ == "__main__":
                     Indices_search_activate()# When search_indices is true the x indices will be loaded.
                     search_y_index = TRUE # When search_y_index is true the y index will be loaded.
                     break # End loop through variables when variable is found
-            continue
+            continue      
         if search_indices:
             current_x_indices = current_variable.get_x_indices(line)
             current_x_indices = [item - 1 for item in current_x_indices]
@@ -711,16 +721,7 @@ if __name__ == "__main__":
                 if search_data:
                     current_z_index = current_variable.get_z_index(line)
                     current_line_data = current_variable.get_nodal_data(line)
-                    current_length = len(current_line_data)
-                    if  read_test_FLX1 == FALSE:   
-                        if ((mydict["Case_2_FLX1"][:,17,0] != test_FLX1).any()):
-                                Fast_flux_changed = 1
-                        if Fast_flux_changed:
-                            print("Current case number = " + str(current_case.case_number) +"\n Current variable name = " + current_variable.name +  "\n Line number = " + str(line_number))
-                            error("Fast flux for case 2 has changed")
-                        else:
-                            print("Current case number = " + str(current_case.case_number) +"\n Current variable name = " + current_variable.name + "\n Line number = " + str(line_number))
-                            print("Fast flux for case 2 hasnt changed")
+                    current_length = len(current_line_data)                    
                     if current_x_indices[0] == 0:
                         if current_y_index % 2 == 1:
                             current_variable.data[current_x_indices[-current_length:],current_y_index-1,current_z_index] = [item / current_scaling for item in current_line_data]
@@ -766,7 +767,7 @@ if __name__ == "__main__":
                                 search_y_index = TRUE
                                 serach_x_indices = TRUE
                                 continue
-        if search_summary:
+        elif search_summary:
                 if not current_case.check_stationary_variables(): # Checks if all the stationary values have been gathered
                     mydict[current_case.case_name+"_"+"Exposure"] = current_case.Exposure
                     mydict[current_case.case_name+"_"+"Boron_conc"] = current_case.Boron_conc
@@ -775,7 +776,7 @@ if __name__ == "__main__":
                     mydict[current_case.case_name+"_"+"Power"] = current_case.Power
                     mydict[current_case.case_name+"_"+"Full_Power"] = current_case.Power/(current_case.Rel_Power*0.01)
                     print("All Stationary variables written for "+ str(current_case.case_name))
-                    search_summary = 0
+                    Case_search_activate()
                     continue
                 try:
                     current_case.Exposure = get_average_exposure(line)

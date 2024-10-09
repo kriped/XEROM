@@ -21,6 +21,7 @@ function analyse_3d_var(var,label)
     var(var == 0) = NaN;
     vec_avg(:) = mean(var,[1,2],"omitmissing");
 
+
     figure()
     surf(X,Y,mat_mean)
     zlabel(label+" averaged axially","FontSize",16)
