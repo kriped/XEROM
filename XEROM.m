@@ -1633,14 +1633,9 @@ DABS1PHI1_CS = feedback_CS.ABS1PHI1 - input_CS.ABS1PHI1;
 DABS2PHI2_CS = feedback_CS.ABS2PHI2 - input_CS.ABS2PHI2;
 DREMPHI1_CS = feedback_CS.REMPHI1 - input_CS.REMPHI1;
 
-% DFLX1 = feedback.STA_FLX1 - input.STA_FLX1;
-% DFLX2 = feedback.STA_FLX2 - input.STA_FLX2;
-
 DFLX1_CS = feedback.MOD_EQ_1_scaled - input.MOD_EQ_1_scaled;
 DFLX2_CS = feedback.MOD_EQ_2_scaled - input.MOD_EQ_2_scaled;
 %Extract only thermal information and convert back to 3D array
-% DNJ1 = zeros(I_MAX,J_MAX,K_MAX);
-% DNJ2 = zeros(I_MAX,J_MAX,K_MAX);
 DNJ1_CS = zeros(I_MAX,J_MAX,K_MAX);
 DNJ2_CS = zeros(I_MAX,J_MAX,K_MAX);
 for I = 1:I_MAX
@@ -1654,64 +1649,32 @@ for I = 1:I_MAX
     end
 end
 
-% DABS1PHI1DPHI1 = DABS1PHI1 ./DFLX1;
-% DNUFIS1PHI1DPHI1 = DNUFIS1PHI1 ./ DFLX1;
-% DNapJ1DPHI1 = DNJ1 ./ DFLX1;
-% DREMPHI1DPHI1 = DREMPHI1 ./ DFLX1;
-
 DABS1PHI1DPHI1_CS = DABS1PHI1_CS ./DFLX1_CS;
 DNUFIS1PHI1DPHI1_CS = DNUFIS1PHI1_CS ./ DFLX1_CS;
 DNapJ1DPHI1_CS = DNJ1_CS ./ DFLX1_CS;
 DREMPHI1DPHI1_CS = DREMPHI1_CS ./ DFLX1_CS;
-% 
-% DABS2PHI2DPHI2 = DABS2PHI2./ DFLX2;
-% DNapJDPHI2 = DNJ2 ./ DFLX2;
-% DNUFIS2PHI2DPHI2 = DNUFIS2PHI2 ./ DFLX2;
 
 DABS2PHI2DPHI2_CS = DABS2PHI2_CS./ DFLX2_CS;
 DNapJDPHI2_CS = DNJ2_CS ./ DFLX2_CS;
 DNUFIS2PHI2DPHI2_CS = DNUFIS2PHI2_CS ./ DFLX2_CS;
 
-% DABS1PHI1DPHI1(isinf(DABS1PHI1DPHI1)) = 0;
-% DNUFIS1PHI1DPHI1(isinf(DNUFIS1PHI1DPHI1)) = 0;
-% DNapJ1DPHI1(isinf(DNapJ1DPHI1)) = 0;
-% DREMPHI1DPHI1(isinf(DREMPHI1DPHI1)) = 0;
-
 DABS1PHI1DPHI1_CS(isinf(DABS1PHI1DPHI1_CS)) = 0;
 DNUFIS1PHI1DPHI1_CS(isinf(DNUFIS1PHI1DPHI1_CS)) = 0;
 DNapJ1DPHI1_CS(isinf(DNapJ1DPHI1_CS)) = 0;
 DREMPHI1DPHI1_CS(isinf(DREMPHI1DPHI1_CS)) = 0;
-% 
-% DABS2PHI2DPHI2(isinf(DABS2PHI2DPHI2)) = 0;
-% DNapJDPHI2(isinf(DNapJDPHI2)) = 0;
-% DNUFIS2PHI2DPHI2(isinf(DNUFIS2PHI2DPHI2)) = 0;
 
 DABS2PHI2DPHI2_CS(isinf(DABS2PHI2DPHI2_CS)) = 0;
 DNapJDPHI2_CS(isinf(DNapJDPHI2_CS)) = 0;
 DNUFIS2PHI2DPHI2_CS(isinf(DNUFIS2PHI2DPHI2_CS)) = 0;
-% 
-% DABS1PHI1DPHI1(isnan(DABS1PHI1DPHI1)) = 0;
-% DNUFIS1PHI1DPHI1(isnan(DNUFIS1PHI1DPHI1)) = 0;
-% DNapJ1DPHI1(isnan(DNapJ1DPHI1)) = 0;
-% DREMPHI1DPHI1(isnan(DREMPHI1DPHI1)) = 0;
 
 DABS1PHI1DPHI1_CS(isnan(DABS1PHI1DPHI1_CS)) = 0;
 DNUFIS1PHI1DPHI1_CS(isnan(DNUFIS1PHI1DPHI1_CS)) = 0;
 DNapJ1DPHI1_CS(isnan(DNapJ1DPHI1_CS)) = 0;
 DREMPHI1DPHI1_CS(isnan(DREMPHI1DPHI1_CS)) = 0;
-% 
-% DABS2PHI2DPHI2(isnan(DABS2PHI2DPHI2)) = 0;
-% DNapJDPHI2(isnan(DNapJDPHI2)) = 0;
-% DNUFIS2PHI2DPHI2(isnan(DNUFIS2PHI2DPHI2)) = 0;
 
 DABS2PHI2DPHI2_CS(isnan(DABS2PHI2DPHI2_CS)) = 0;
 DNapJDPHI2_CS(isnan(DNapJDPHI2_CS)) = 0;
 DNUFIS2PHI2DPHI2_CS(isnan(DNUFIS2PHI2DPHI2_CS)) = 0;
-
-% FB11 = DNUFIS1PHI1DPHI1-DREMPHI1DPHI1-DNapJ1DPHI1-DABS1PHI1DPHI1;
-% FB12 = DNUFIS2PHI2DPHI2;
-% FB21 = DREMPHI1DPHI1;
-% FB22 = -DNapJDPHI2-DABS2PHI2DPHI2;
 
 FB11_CS = DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS-DABS1PHI1DPHI1_CS;
 FB12_CS = DNUFIS2PHI2DPHI2_CS;
@@ -1721,108 +1684,6 @@ FB22_CS = -DNapJDPHI2_CS-DABS2PHI2DPHI2_CS;
 h = DZ:DZ:DZ*sizez;
 % Investigate the differences in the different areas of the feedback matrix
 % between CORESIM and SIMUATE
-
-% vec11(:) = mean(FB11,[1,2]);
-% vec11_CS(:) = mean(FB11_CS,[1,2]);
-% figure()
-% hold on 
-% plot(h,vec11,"LineWidth",2)
-% plot(h,vec11_CS,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("FB11","FontSize",22)
-% legend("Simulate", "CORESIM","FontSize",16)
-% 
-% rel_diff11 = (FB11-FB11_CS)./FB11;
-% rel_diff11(isnan(rel_diff11)) = 0;
-% rel_diff11(isinf(rel_diff11)) = 0;
-% reldiff_vec11(:) = mean(rel_diff11,[1,2]);
-% figure()
-% plot(h,reldiff_vec11,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("relative difference FB11","FontSize",22)
-% 
-% mean(reldiff_vec11)
-% 
-% diff11 = FB11-FB11_CS;
-% diff_vec11(:) = mean(diff11,[1,2]);
-% figure()
-% plot(h,diff_vec11,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("Absolute difference FB11","FontSize",22)
-% 
-% vec12(:) = mean(FB12,[1,2]);
-% vec12_CS(:) = mean(FB12_CS,[1,2]);
-% figure()
-% hold on 
-% plot(h,vec12,"LineWidth",2)
-% plot(h,vec12_CS,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("FB12","FontSize",22)
-% legend("Simulate", "CORESIM","FontSize",16)
-% 
-% rel_diff12 = (FB12-FB12_CS)./FB12;
-% rel_diff12(isnan(rel_diff12)) = 0;
-% reldiff_vec12(:) = mean(rel_diff12,[1,2]);
-% figure()
-% plot(h,reldiff_vec12,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("relative difference FB12","FontSize",22)
-% 
-% mean(reldiff_vec12)
-% 
-% vec21(:) = mean(FB21,[1,2]);
-% vec21_CS(:) = mean(FB21_CS,[1,2]);
-% figure()
-% hold on 
-% plot(h,vec21,"LineWidth",2)
-% plot(h,vec21_CS,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("FB21","FontSize",22)
-% legend("Simulate", "CORESIM","FontSize",16)
-% 
-% rel_diff21 = (FB21-FB21_CS)./FB21;
-% rel_diff21(isnan(rel_diff21)) = 0;
-% rel_diff21(isinf(rel_diff21)) = 0;
-% reldiff_vec21(:) = mean(rel_diff21,[1,2]);
-% figure()
-% plot(h,reldiff_vec21,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("relative difference FB21","FontSize",22)
-% 
-% mean(reldiff_vec21)
-% 
-% vec22(:) = mean(FB22,[1,2]);
-% vec22_CS(:) = mean(FB22_CS,[1,2]);
-% figure()
-% hold on 
-% plot(h,vec22,"LineWidth",2)
-% plot(h,vec22_CS,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("FB22","FontSize",22)
-% legend("Simulate", "CORESIM","FontSize",16)
-% 
-% rel_diff22 = (FB22-FB22_CS)./FB22;
-% rel_diff22(isnan(rel_diff22)) = 0;
-% rel_diff22(isinf(rel_diff22)) = 0;
-% reldiff_vec22(:) = mean(rel_diff22,[1,2]);
-% figure()
-% plot(h,reldiff_vec22,"LineWidth",2)
-% xlabel("Height","FontSize",22)
-% ylabel("relative difference FB22","FontSize",22)
-% 
-% mean(reldiff_vec22)
-
-% figure()
-% hold on 
-% vec1(:) = mean(input.MOD_EQ_1_scaled,[1,2]);
-% vec2(:) = mean(feedback.MOD_EQ_1_scaled,[1,2]);
-% plot(h,vec1)
-% plot(h,vec2)
-% xlabel("Height (cm)","FontSize",16)
-% ylabel("Fast neutron flux (cm^{-2}s^{-1})","FontSize",16)
-% legend("100% fast flux", "50% fast flux","Location","south")
-
-
 
 %clearvars input feedback
 delete temp/temp_input_vars.mat
@@ -1848,6 +1709,7 @@ sizex = I_MAX; %number of nodes in the x-direction
 sizey = J_MAX; %number of nodes in the y-direction
 sizez = K_MAX; %number of nodes in the z-direction
 M=5;
+nu=2.44;
 v1 = 2E9; % fast neutron velocity in cm/s
 v2 = 2.2E5; % thermal neutron velocity in cm/s 
 KAPPA = 0.2976e-10; % Guessed value of Kappa (source unknown) same as is used in the 1G homogenous model
@@ -1860,6 +1722,7 @@ sigmaX = 1.3e-18;
 %sigmaX2 = 2.778E6*1E-24;
 
 V_inv = [1/v1, 0 ; 0, 1/v2];
+%K_VALUE = lambda;
 K_VALUE = lambda([1,2,3,4,7]); % K values / eigenvalues of the modes
 DV = DX*DY*DZ; % Discreet volume element
 %KN = XS.KN; % kappa / nu
@@ -1873,9 +1736,9 @@ ONE = ones(size(NUFIS1)); % unit element matching the size of the reactor
 %CR_SA = [CR_SA1,ZERO;ZERO,CR_SA2];
 F = 1/keff.*[input.NUFIS1, input.NUFIS2;ZERO,ZERO]; % Fission matrix
 %D = [-D1,ZERO;ZERO,-D2]; % Diffusion coefficient matrix
-MOD = [input_results.MOD1;input_results.MOD2]; % vector of solutions to the forward problem
-MOD_adj = [input_results.MOD1_adj,input_results.MOD2_adj]; % vector of solutions to the adjoint problem
-MOD_EQ = abs([input_results.MOD1(:,:,:,1);input_results.MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
+MOD = [MOD1;MOD2]; % vector of solutions to the forward problem
+MOD_adj = [MOD1_adj,MOD2_adj]; % vector of solutions to the adjoint problem
+MOD_EQ = abs([MOD1(:,:,:,1);MOD2(:,:,:,1)]); % Vector of only the equilibrium neutron flux solution
 % MOD_EQ_INT = DV * sum(MOD1(:,:,:,1)+MOD2(:,:,:,1),'all');
 % SIGF_PHI_INT_2G=DV*sum(G2_inner_product([SIGF1,SIGF2],MOD_EQ,"vector","vector"),"all")
 KFISINT =  DV*1/keff*sum(G2_inner_product([KFIS1,KFIS2],MOD_EQ,"vector","vector"),"all");
@@ -1889,104 +1752,22 @@ MOD_UPPER = [MOD_EQ_2_scaled, ZERO ; ZERO, ZERO]; % Costom matrix used in the eq
 MOD_LOWER = [ZERO, ZERO; MOD_EQ_2_scaled, ZERO]; % Costom matrix used in the equations
 %Make matrices of delta values only for termal feedbacks
 
-% Removal of Fission feedback cross sections
-% DeltaXS = [(-DREMPHI1DPHI1-DNapJ1DPHI1-DABS1PHI1DPHI1)*1.0,ZERO; DREMPHI1DPHI1, -DNapJDPHI2-DABS2PHI2DPHI2 ];
-% DeltaXS_CS = [(-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS-DABS1PHI1DPHI1_CS)*1.0,ZERO; DREMPHI1DPHI1_CS, -DNapJDPHI2_CS-DABS2PHI2DPHI2_CS ];
-% label = "Fission fb removed";
-% file_label = "NUFIS_FB_rem";
-
-% Removal of Absorption feedback cross sections
-% DeltaXS = [(DNUFIS1PHI1DPHI1-DREMPHI1DPHI1-DNapJ1DPHI1)*1.0,DNUFIS2PHI2DPHI2; DREMPHI1DPHI1, -DNapJDPHI2 ];
-% DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS)*1.0,DNUFIS2PHI2DPHI2_CS; DREMPHI1DPHI1_CS, -DNapJDPHI2_CS ];
-% label = "ABS fb removed";
-% file_label = "ABS_FB_rem";
-
-
-
 %Original feedback matrix
 %DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS-DABS1PHI1DPHI1_CS)*1.0,DNUFIS2PHI2DPHI2_CS; DREMPHI1DPHI1_CS, -DNapJDPHI2_CS-DABS2PHI2DPHI2_CS ];
 %save("HET_Feedback","DeltaXS_CS");
 DeltaXS_CS = [ -0.0187, 0.1482; 0.0138,-0.1135];
-label = "no fb removed";
-file_label = "no_FB_rem";
-
-%Removal of leakage feedback
-% DeltaXS = [(DNUFIS1PHI1DPHI1-DREMPHI1DPHI1-DABS1PHI1DPHI1)*1.0,DNUFIS2PHI2DPHI2; DREMPHI1DPHI1, -DABS2PHI2DPHI2 ];
-% DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DABS1PHI1DPHI1_CS)*1.0,DNUFIS2PHI2DPHI2_CS; DREMPHI1DPHI1_CS, -DABS2PHI2DPHI2_CS ];
-% label = "LEAK fb removed";
-% file_label = "leak_FB_rem";
-
-%Removal of leakage and removal feedback
-% DeltaXS = [(DNUFIS1PHI1DPHI1-DABS1PHI1DPHI1),DNUFIS2PHI2DPHI2; ZERO, -DABS2PHI2DPHI2 ];
-% DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DABS1PHI1DPHI1_CS),DNUFIS2PHI2DPHI2_CS; ZERO, -DABS2PHI2DPHI2_CS ];
-% label = "LEAK and REM fb removed";
-% file_label = "leak_REM_FB_rem";
-
-% Removal of removal feedback cross sections
-% DeltaXS = [(DNUFIS1PHI1DPHI1-DREMPHI1DPHI1-DNapJ1DPHI1-DABS1PHI1DPHI1)*1.0,DNUFIS2PHI2DPHI2; ZERO, -DNapJDPHI2-DABS2PHI2DPHI2 ];
-% DeltaXS_CS = [(DNUFIS1PHI1DPHI1_CS-DREMPHI1DPHI1_CS-DNapJ1DPHI1_CS-DABS1PHI1DPHI1_CS)*1.0,DNUFIS2PHI2DPHI2_CS; ZERO, -DNapJDPHI2_CS-DABS2PHI2DPHI2_CS ];
-% label = "REM fb removed";
-% file_label = "REM_FB_rem";
-
+folder_name = "new_equations";
 %intial_AO = (DV*1/keff*sum(KFIS1(:,:,sizez/2+1:sizez).*input.MOD_EQ_1_scaled(:,:,sizez/2+1:sizez)+KFIS2(:,:,sizez/2+1:sizez).*input.MOD_EQ_2_scaled(:,:,sizez/2+1:sizez),'all')-DV*1/keff*sum(KFIS1(:,:,1:sizez/2).*input.MOD_EQ_1_scaled(:,:,1:sizez/2)+KFIS2(:,:,1:sizez/2).*input.MOD_EQ_2_scaled(:,:,1:sizez/2),'all'))/(1/keff*DV*sum(KFIS1(:,:,:).*input.MOD_EQ_1_scaled(:,:,:)+KFIS2(:,:,:).*input.MOD_EQ_2_scaled(:,:,:),'all'));
 intial_AO = (1/keff*DV*sum(KFIS1(:,:,sizez/2+1:sizez).*input.STA_FLX1(:,:,sizez/2+1:sizez)+KFIS2(:,:,sizez/2+1:sizez).*input.STA_FLX2(:,:,sizez/2+1:sizez),'all')-1/keff1_SIM*DV*sum(KFIS1(:,:,1:sizez/2).*input.STA_FLX1(:,:,1:sizez/2)+KFIS2(:,:,1:sizez/2).*input.STA_FLX2(:,:,1:sizez/2),'all'))/(1/keff1_SIM*DV*sum(KFIS1(:,:,:).*input.STA_FLX1(:,:,:)+KFIS2(:,:,:).*input.STA_FLX2(:,:,:),'all'));
 
-% mat1(:,:) = mean(input.STA_FLX2,3);
-% vec1(:) = mean(input.STA_FLX2,[1,2]);
-% mat2(:,:) = mean(MOD_EQ_2_scaled,3);
-% vec2(:) = mean(MOD_EQ_2_scaled,[1,2]);
-% figure(1)
-% diff_mat = (mat1-mat2)./mat1;
-% surf(diff_mat)
-% xlabel("X (nodes)")
-% ylabel("Y (Nodes)")
-% title("radial thermal relative error(averaged) ((SIM-CS)/SIM)")
-% view(2)
-% colorbar
-% figure(2)
-% plot(vec1)
-% hold on
-% plot(vec2)
-% xlabel("Height (nodes)")
-% ylabel("Thermal neutron flux (cm^{-2}s^{-1})")
-% legend("SIMULATE","CORE SIM")
-% figure(3)
-% plot((vec1-vec2)./vec1)
-% xlabel("Height (Nodes)")
-% ylabel("Relative thermal error ((SIM-CS)/SIM)")
 
 
-% mat1(:,:) = mean(input.STA_FLX1,3);
-% vec1(:) = mean(input.STA_FLX1,[1,2]);
-% mat2(:,:) = mean(MOD_EQ_1_scaled,3);
-% vec2(:) = mean(MOD_EQ_1_scaled,[1,2]);
-% figure(4)
-% reldiff_thermal = (STA_FLX2-MOD_EQ_2_scaled)./STA_FLX2;
-% diff_mat = mean(reldiff_thermal,3);
-% surf(diff_mat)
-% xlabel("X (nodes)")
-% ylabel("Y (Nodes)")
-% title("Radial fast relative error(averaged) ((SIM-CS)/SIM)")
-% view(2)
-% colorbar
-% figure(5)
-% plot(vec1)
-% hold on
-% plot(vec2)
-% xlabel("Height (nodes)")
-% ylabel("Fast neutron flux (cm^{-2}s^{-1})")
-% legend("SIMULATE","CORE SIM")
-% figure(6)
-% plot((vec1-vec2)./vec1)
-% xlabel("Height (Nodes)")
-% ylabel("Relative fast error ((SIM-CS)/SIM)")
-
-PHI_bottom = zeros(1,M);
-PHI_top = zeros(1,M);
-for mode = 1:M
-    PHI_bottom(mode) = DV*sum(G2_inner_product([SIGF1(:,:,1:sizez/2),SIGF2(:,:,1:sizez/2)],MOD(:,:,1:sizez/2,mode),"vector","vector"),1:3);
-    PHI_top(mode) = DV*sum(G2_inner_product([SIGF1(:,:,sizez/2+1:end),SIGF2(:,:,sizez/2+1:end)], MOD(:,:,sizez/2+1:end,mode),"vector","vector"),1:3);
-end
+% PHI_bottom = zeros(1,M);
+% PHI_top = zeros(1,M);
+% for mode = 1:M
+%     PHI_bottom(mode) = DV*sum(G2_inner_product([SIGF1(:,:,1:sizez/2),SIGF2(:,:,1:sizez/2)],MOD(:,:,1:sizez/2,mode),"vector","vector"),1:3);
+%     PHI_top(mode) = DV*sum(G2_inner_product([SIGF1(:,:,sizez/2+1:end),SIGF2(:,:,sizez/2+1:end)], MOD(:,:,sizez/2+1:end,mode),"vector","vector"),1:3);
+% end
 
 %SIG = [ABS1+REM, ZERO ; -REM, ABS2]; % Matrix containing the absorbtion and removal cross sections
 GAMMAI = 1/keff.*[gammaI*SIGF1,gammaI*SIGF2 ; ZERO, ZERO ]; % matrix containing the production of Iodine from fission
@@ -2004,29 +1785,6 @@ X0_calc = ((gammaX+gammaI)*(SIGF1.*MOD_EQ_1_scaled+SIGF2.*MOD_EQ_2_scaled))./((1
 %X0 = 1/K_VALUE(1)*(gammaI+gammaX)*(SIGF1.*MOD_EQ_scaled(1:32,:,:)+SIGF2.*MOD_EQ_scaled(33:end,:,:))./(lambdaX+sigmaX*MOD_EQ_scaled(33:end,:,:));
 Xe_UPPER = [ZERO,X0;ZERO,ZERO]; % Custom matrix used in the equations
 
-% I0_fig = figure();
-% hold on
-% vec1(:) = mean(I0,[1,2]);
-% vec2(:) = mean(I0_calc,[1,2]);
-% plot(h,vec1,"LineWidth",2)
-% plot(h,vec2,"LineWidth",2)
-% xlabel("Height (cm)",FontSize=22)
-% ylabel("Iodine concentration [cm^{-3}]",FontSize=22)
-% legend("Simulate","XEROM")
-% saveas(I0_fig,"output_100_95/I0.png")
-% 
-% X0_fig = figure();
-% hold on
-% vec1(:) = mean(X0,[1,2]);
-% vec2(:) = mean(X0_calc,[1,2]);
-% plot(h,vec1,"LineWidth",2)
-% plot(h,vec2,"LineWidth",2)
-% xlabel("Height (cm)",FontSize=22)
-% ylabel("Xenon concentration [cm^{-3}]",FontSize=22)
-% legend("Simulate","XEROM")
-% saveas(X0_fig,"output_100_95/X0.png")
-
-
 %% test properties
 % close all
 Volume = DV * sum(MOD1(:,:,:,1)~=0,'all');
@@ -2042,13 +1800,13 @@ active_volume = DV * sum(NUFIS1~=0,'all');
 % MOD_EQ2_max = max(MOD_EQ_scaled(sizex+1:end,:,:),[],'all');
 % X0_max = max(X0,[],'all');
 % I0_max = max(I0,[],'all');
-DSA1_average = DV*sum(DABS1PHI1DPHI1_CS,'all')/Volume
-DSF1_average = DV*sum(DNUFIS1PHI1DPHI1_CS,'all')/active_volume
-DNaJ1_average = DV*sum( DNapJ1DPHI1_CS,'all')/Volume
-DREM_average = DV*sum(DREMPHI1DPHI1_CS,'all')/Volume
-DSA2_average = DV*sum(DABS2PHI2DPHI2_CS,'all')/Volume
-DSF2_average = DV*sum(DNUFIS2PHI2DPHI2_CS,'all')/active_volume
-DNaJ2_average = DV*sum(DNapJDPHI2_CS,'all')/Volume
+% DSA1_average = DV*sum(DABS1PHI1DPHI1_CS,'all')/Volume
+% DSF1_average = DV*sum(DNUFIS1PHI1DPHI1_CS,'all')/active_volume
+% DNaJ1_average = DV*sum( DNapJ1DPHI1_CS,'all')/Volume
+% DREM_average = DV*sum(DREMPHI1DPHI1_CS,'all')/Volume
+% DSA2_average = DV*sum(DABS2PHI2DPHI2_CS,'all')/Volume
+% DSF2_average = DV*sum(DNUFIS2PHI2DPHI2_CS,'all')/active_volume
+% DNaJ2_average = DV*sum(DNapJDPHI2_CS,'all')/Volume
 % delta_NUFIS1 = feedback.NUFIS1-input.NUFIS1;
 % delta_ABS1 = feedback.ABS1 - input.ABS1;
 % delta_NUFIS2 = feedback.NUFIS2-input.NUFIS2;
@@ -2160,20 +1918,7 @@ for m = 1:M
     for n = 1:M
         PHID_GAMMAX_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_GAMMAX_PHI(:,:,:,n),"vector","vector"),"all"); % <Phi^dagger_m | Gamma_X * Phi_n >
         PHID_GAMMAI_PHI(m,n) =  DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_GAMMAI_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | Gamma_I * Phi_n > 
-        %PHID_PHI_eq_mat_PHI(m,n) =  DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHI_eq_mat_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | Phi_eq_mat Phi_n >
-        %PHID_FB_PHI(m,n) = DV * sum(G2_inner_product(MOD_adj(:,:,:,m),temp_FB_PHI(:,:,:,n),"vector","vector"),"all");
         PHID_FB_PHI(m,n) = DV * sum(G2_inner_product(MOD_adj(:,:,:,m),temp_FB_PHI(:,:,:,n),"vector","vector"),"all");
-        % temp_PHID_FB_PHI(:,:,:) = G2_inner_product(MOD_adj(:,:,:,m),temp_FB_PHI(:,:,:,n),"vector","vector");
-        % temp_PHID_FB_PHI_averaged = zeros(sizex/2,sizey/2,sizez/2);
-        % for X = 1:sizex/2
-        %      for Y = 1:sizey/2
-        %          for Z = 1:sizez/2
-        %             temp_PHID_FB_PHI_averaged(X,Y,Z) = mean(temp_PHID_FB_PHI(2*X-1:2*X,2*Y-1:2*Y,2*Z-1:2*Z),'all');
-        %         end
-        %     end
-        % end
-        % temp_PHID_FB_PHI_resized = repelem(temp_PHID_FB_PHI_averaged,2,2,2);
-        % PHID_FB_PHI(m,n) = DV*sum(temp_PHID_FB_PHI_resized,"all");
         PHID_PHIUPPER_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHIUPPER_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \bar{X} \Phi_0 \hat{X}^T * F Phi_n >
         PHID_PHILOWER_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_PHILOWER_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \tilde{X} \Phi_0 \hat{X}^T * F Phi_n >
         PHID_X0_PHI(m,n) = DV*sum(G2_inner_product(MOD_adj(:,:,:,m),temp_X0_PHI(:,:,:,n),"vector","vector"),"all"); %<Phi^dagger_m | \bar{X} X_0 Phi_n >
@@ -2183,132 +1928,35 @@ end
 
 LAMBDA = PHID_V_PHI./ PHID_F_PHI; % <Phi^dagger_m |v^-1 Phi_n>/ <Phi^dagger_m |F Phi_m> 
 
-%% investiate feedback terms
-% 
-     modes = [1,2,3,4,5];
-     var = zeros(sizez,length(modes));
-     var_plane = zeros(sizex,sizey,length(modes));
-     var2_line = zeros(sizey,length(modes));
-     for mode = 1:numel(modes)
-        var(:,mode) = mean(MOD1(:,:,:,modes(mode)),[1,2]);
-        var_full(:,:,:) = MOD1(:,:,:,modes(mode));
-        var_plane(:,:,mode) = mean(var_full,3);
-        var2_line(:,mode) = var_plane(:,sizex/2,mode);
-     end
-     %var = G2_inner_product(MOD_adj(:,:,:,mode),temp_FB_PHI(:,:,:,mode),"vector","vector");
-%    % var_CS = G2_inner_product(MOD_adj(:,:,:,mode),temp_FB_PHI_CS(:,:,:,mode),"vector","vector");
-     Width = DX*sizex;
-     Height = DZ*sizez;
-     x = linspace(0,Width,sizex);
-     y = linspace(0,Width,sizey);
-     z = linspace(0,Height,sizez);
-     [X,Y] = meshgrid(x,y);
-     figure()
-     plot(z,var,"LineWidth",2,"LineStyle","-")
-     xlabel("Height (cm)","FontSize",16)
-     ylabel("Amplitude (A.U.)","FontSize",16)
-     legend(["Mode 1", "Mode 2", "Mode 3", "Mode 4", "Mode 5"],"FontSize",16,Location = "BestOutside" )
-     figure()
-     plot(x,var2_line,"LineWidth",2,"LineStyle","-")
-     %ylim("padded")
-     xlabel("X (cm)","FontSize",16)
-     ylabel("Amplitude (A.U.)","FontSize",16)
-     legend(["Mode 1", "Mode 2", "Mode 3", "Mode 4", "Mode 5"],"FontSize",16,Location = "BestOutside" )
-     % 
-     % zMiddle = var_plane(:, middleX,4);
-     % xmiddle = repmat(x(sizex/2),size(y));
-     % surf(X,Y,var_plane(:,:,4),"EdgeColor","None")
-     % view(2)
-     % hold on
-     % plot3(xmiddle, y, zMiddle, 'r', 'LineWidth', 2);  % 'r' sets the color to red, and 'LineWidth' sets the line width
-     % xlabel("X [cm]")
-     % ylabel("Y (cm)")
-%     vec_cl(:) = var(ceil(sizex/2),ceil(sizey/2),:);
-%     vec_oc(:) = var(25,ceil(sizey/2),:);
-%     var(var == 0) = NaN;
-%     vec_avg(:) = mean(var,[1,2],"omitmissing");
-%     radline_cl(:) = var(:,sizey/2,sizez/2);
-%     radline_oc(:) = var(:,25,sizez/2);
-%     average_plane(:,:) = mean(var,3,"omitmissing");
-%     radline_avg(:) = average_plane(:,sizey/2);
-%     radline_avg_2(:) = mean(var,[2,3],"omitmissing");
-% 
-%     vec_CS_cl(:) = var_CS(ceil(sizex/2),ceil(sizey/2),:);
-%     vec_CS_oc(:) = var_CS(25,ceil(sizey/2),:);
-%     var_CS(var_CS == 0) = NaN;
-%     vec_avg_CS(:) = mean(var_CS,[1,2],"omitmissing");
-%     radline_CS_cl(:) = var_CS(:,sizey/2,sizez/2);
-%     radline_CS_oc(:) = var_CS(:,25,sizez/2);
-%     average_plane_CS(:,:) = mean(var_CS,3,"omitmissing");
-%     radline_avg_CS(:) = average_plane_CS(:,sizey/2);
-%     radline_avg_2_CS(:) = mean(var_CS,[2,3],"omitmissing");
-% 
-%     % plot axial central line
-%     figure()
-%     plot(z,vec_cl)
-%     hold on 
-%     plot(z,vec_CS_cl)
-%     xlabel("Height (cm)","FontSize",16)
-%     ylabel(label + " central line","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_CL_"+mode+".png")
-%     % plot axial off center line
-%     figure()
-%     plot(z,vec_oc)
-%     hold on 
-%     plot(z,vec_CS_oc)
-%     xlabel("Height (cm)","FontSize",16)
-%     ylabel(label + " off-center line","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_OC_"+mode+".png")
-%     % Plot average axial
-%     figure()
-%     plot(z,vec_avg)
-%     hold on
-%     plot(z,vec_avg_CS)
-%     xlabel("Height (cm)","FontSize",16)
-%     ylabel(label+" averaged radially","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_avg_"+mode+".png")
-%     %plot radial line
-%     figure()
-%     plot(x,radline_cl)
-%     hold on
-%     plot(x,radline_CS_cl)
-%     xlabel("X (cm)","FontSize",16)
-%     ylabel(label+" central line","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_Radline_CL_"+mode+".png")
-%     %plot radial off-center line
-%     figure()
-%     plot(x,radline_oc)
-%     hold on
-%     plot(x,radline_CS_oc)
-%     xlabel("X (cm)","FontSize",16)
-%     ylabel(label+" off-center line","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_Radline_OC_"+mode+".png")
-%     %plot radial line average
-%     figure()
-%     plot(x,radline_avg)
-%     hold on
-%     plot(x,radline_avg_CS)
-%     xlabel("X (cm)","FontSize",16)
-%     ylabel(label+" averaged axially","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_RadAvg_"+mode+".png")
-%     figure()
-%     plot(x,radline_avg_2)
-%     hold on
-%     plot(x,radline_avg_2_CS)
-%     xlabel("X (cm)","FontSize",16)
-%     ylabel(label+" averaged Y and Z","FontSize",16)
-%     legend("SIMULATE", "CORESIM")
-%     saveas(gcf,"Results/FB_rem/"+file_label+"_RadAvg2_"+i+".png")
-
 %% clear temp variables
 %clearvars temp*
+%% Test feedback terms
+% make dimensionless values
+MOD1_max(:) = max(MOD1,[],[1,2,3]);
+MOD2_max(:) = max(MOD2,[],[1,2,3]);
+scaled_flux1_max = max(MOD_EQ_1_scaled,[],'all');
+scaled_flux2_max = max(MOD_EQ_2_scaled,[],'all');
+
+
+
 %% test magnitudes of terms
+FB = zeros(M);
+P1 = zeros(M);
+X = zeros(M);
+P2 = zeros(M);
+for m= 1:M
+    for n = 1:M
+        FB(m,n) = 1./LAMBDA(m).*PHID_FB_PHI(m,n)./PHID_F_PHI(m);
+        P1(m,n) = 1./LAMBDA(m).*PHID_PHILOWER_PHI(m,n)/PHID_F_PHI(m)*PHID_PHI(n)/PHID_F_PHI(n);
+        X(m,n) = PHID_X0_PHI(m,n)/PHID_PHI(m);
+        P2(m,n) =PHID_PHIUPPER_PHI(m,n)/PHID_PHI(m)*PHID_PHI(n)/PHID_F_PHI(n);
+    end
+end
+FB_norm = FB/FB(1,1);
+P1_norm = P1/P1(1,1);
+X_norm = X/X(1,1);
+P2_norm = P2/P2(1,1);
+
 sprintf("Printing eig separation term")
 1./LAMBDA'.*(1./K_VALUE(1)-1./K_VALUE) 
 sprintf("printing feedback term")
@@ -2317,173 +1965,56 @@ sprintf("printing diagonal of feedback term")
 diag(1./LAMBDA.*PHID_FB_PHI./PHID_F_PHI)
 C11 = diag(1./LAMBDA.*PHID_FB_PHI./PHID_F_PHI) + 1./LAMBDA'.*(1./K_VALUE(1)-1./K_VALUE)
 sprintf("printing flux xenon term")
-C13 = diag(-1./LAMBDA.*sigmaX.*PHID_PHILOWER_PHI./(PHID_F_PHI.^2).*PHID_PHI)   
+C13 = diag(sigmaX.*P1);   
 sprintf("Printing Iodine creation term")
-C21 = diag(PHID_GAMMAI_PHI./PHID_PHI)
+C21 = gammaI/nu*PHID_F_PHI./PHID_PHI
 sprintf("Printing first xenon absorption term")
--sigmaX.*PHID_X0_PHI./PHID_PHI
-C31 = diag((PHID_GAMMAX_PHI-sigmaX*PHID_X0_PHI)./PHID_PHI)
+C22 = -lambdaI;
+C31 = diag(gammaX/nu *PHID_F_PHI./PHID_PHI-sigmaX*X)
 sprintf("Printing second xenon absorption term")
-C33 = diag(-sigmaX.*PHID_PHIUPPER_PHI./PHID_F_PHI)
-FB_spatial = G2_inner_product(MOD_adj(:,:,:,1),temp_FB_PHI(:,:,:,1),"vector","vector");
-analyse_3d_var(FB_spatial,"Feedback")
+C22 = lambdaI;
+C33 = diag(-sigmaX.*P2)
+
+
+
 save data/tempFile
 %%
+% matrix = 1./LAMBDA.*PHID_FB_PHI./PHID_F_PHI/(1./LAMBDA(1).*PHID_FB_PHI(1,1)./PHID_F_PHI(1));
+% % Create a heatmap
+% figure;
+% h = heatmap(matrix);
+% % Apply the formatted labels to the heatmap
+% h.CellLabelFormat = '%0.2f'; % Format for the heatmap cells
+% h.ColorLimits = [min(matrix(:)), max(matrix(:))]; % Adjust color scaling to matrix range
+% labels = {"Fundamental Mode", "First Axial Harmonic Mode", ...
+%           "First Radial Harmonic Mode", "Second Radial Harmonic Mode", ...
+%           "Second Axial Harmonic Mode"};
+% % Add custom axis labels
+% h.XDisplayLabels = labels; % Set column (X-axis) labels
+% h.YDisplayLabels = labels; % Set row (Y-axis) labels
+% % Add axis labels
+% %h.XLabel = 'Column Index';
+% %h.YLabel = 'Row Index';
+% 
+% % Customize color scheme
+% colormap('parula'); % Change to any preferred colormap ('parula', 'hot', etc.)
+% colorbar; % Add a colorbar for reference
+% 
+% % Set title
+% %title('Heatmap of Matrix Values');
+% 
+% % Format the numbers to display 2 decimals
+% % Generate custom labels for each cell
+% dataLabels = arrayfun(@(x) sprintf('%.2f', x), matrix, 'UniformOutput', false);
+
+%%
 [time_2G,state_values_2G] = ode_Nsolve();
-% [time_2G_CS,state_values_2G_CS] = ode_Nsolve_CS();
-%%
-%delete data/tempFile.mat
-%toc
-%%
-close all
-% figure(1)
-% tot_sol_phi = state_values_2G(:,1:3:M*3);
-% phi_point_1(1,:) = MOD1(25,25,17,:);
-% temp_spatial_point_1 = tot_sol_phi*phi_point_1';
-% plot(time_2G(1:end)/3600, temp_spatial_point_1(1:end))
-% ylim([-8E6,8E6])
-% xlabel("Time [h]",'Fontsize', 14);
-% ylabel("Normalized neutron flux [AU]",'Fontsize', 14);
+clearvars -except time_2G state_values_2G C11 folder_name;
+%investigation = "Feedback_coefficient_variations_10_24";
+investigation = "New_equations";
+if exist(sprintf("../%s/%s",investigation,folder_name),"dir") ~= 7
+    mkdir(sprintf("../%s/%s",investigation,folder_name))
+end
+C11
+save(sprintf("../%s/%s/Results_HET",investigation,folder_name))
 
-time_int = figure('Position', get(0, 'Screensize'));
-%yyaxis left
-plot(time_2G(1:end)/3600,state_values_2G(1:end,([2 1 5]-1)*3+1),"LineWidth",2,"LineStyle","-.")
-grid on
-%yticks(-3e9:0.5e9:3e9)
-xlim([0 70])    
-ylim([-4E8 6E8])
-ylabel("Amplitude [cm^{-2}s^{-1}]",'Fontsize', 22)
-xlabel("Time [h]",'Fontsize', 22)
-legend("First axial harmonic", "Fundamental mode", "Second axial harmonic","Fontsize",22,"location","best")
-ax2 = gca;
-ax2.FontSize = 22;
-
-saveas(time_int,"Results/time_int.png");
-saveas(time_int,"Results/time_int.fig");
-%% prediction of flux, iodine and xenon behavior
-
-% FMOD = zeros(sizex,sizey,sizez,M);
-% for m =1:M
-%     FMOD(:,:,:,m) = 1/keff*NUFIS1.*MOD1(:,:,:,m)+1/keff*NUFIS2.*MOD2(:,:,:,m);
-% end
-% flx_amp = state_values_2G(:,1:3:end);
-% I_amp = state_values_2G(:,2:3:end);
-% X_amp = state_values_2G(:,3:3:end);
-% svsize = size(state_values_2G);
-% ntimesteps = svsize(1);
-% 
-% flx_amp_reshaped = reshape(flx_amp,[1,1,1,ntimesteps,M]); 
-% I_amp_reshaped = reshape(I_amp,[1,1,1,ntimesteps,M]); 
-% X_amp_reshaped = reshape(X_amp,[1,1,1,ntimesteps,M]);
-% MOD1_reshaped = reshape(MOD1,[sizex,sizey,sizez,1,M]);
-% MOD2_reshaped = reshape(MOD2,[sizex,sizey,sizez,1,M]);
-% FMOD_reshaped = reshape(FMOD,[sizex,sizey,sizez,1,M]);
-% 
-% 
-% for m = 1:M
-%     if m==1 
-%         FLX1_pred = flx_amp_reshaped(:,:,:,:,m).*MOD1_reshaped(:,:,:,:,m);
-%         FLX2_pred = flx_amp_reshaped(:,:,:,:,m).*MOD2_reshaped(:,:,:,:,m);
-%         I_PRED = I_amp_reshaped(:,:,:,:,m) .* FMOD_reshaped(:,:,:,:,m); 
-%         X_PRED = X_amp_reshaped(:,:,:,:,m) .* FMOD_reshaped(:,:,:,:,m); 
-%     else
-%         FLX1_pred = FLX1_pred + flx_amp_reshaped(:,:,:,:,m).*MOD1_reshaped(:,:,:,:,m);
-%         FLX2_pred = FLX2_pred + flx_amp_reshaped(:,:,:,:,m).*MOD2_reshaped(:,:,:,:,m);
-%         I_PRED = I_PRED + I_amp_reshaped(:,:,:,:,m) .* FMOD_reshaped(:,:,:,:,m); 
-%         X_PRED = X_PRED + X_amp_reshaped(:,:,:,:,m) .* FMOD_reshaped(:,:,:,:,m);
-%     end
-% end
-
-
-%FLX_pred = tensorprod(flx_amp,MOD,2,4);
-%FLX1_pred = FLX_pred(:,1:sizex,:,:);
-%FLX2_pred = FLX_pred(:,sizex+1:end,:,:);
-%I_pred = tensorprod(I_amp,FMOD,2,4);
-%X_pred = tensorprod(X_amp,FMOD,2,4);
-
-%% Check that the fluxes and FP distribtions at the first time step should be close to the equilibrium value 
-% FLX1_test(:,:,:) = FLX1_pred(:,:,:,1500);
-% FLX2_test(:,:,:) = FLX2_pred(:,:,:,1500);
-% I_test(:,:,:) = I_pred(1500,:,:,:);
-% X_test(:,:,:) = X_pred(1500,:,:,:);
-% 
-% analyse_3d_var(FLX1_test,"flux1 test")
-% analyse_3d_var(FLX2_test,"flux2 test")
-% analyse_3d_var(I_test,"Iodine test")
-% analyse_3d_var(X_test,"Xenon test")
-
-%%
-% 
-% Thermal_comp_100 = figure('Position', get(0, 'Screensize'));
-% hold on
-% vec_thermal_CORESIM(:) = mean(input.MOD_EQ_2_scaled,[1,2]);
-% vec_thermal_SIMULATE(:) = mean(input.STA_FLX2,[1,2]);
-% vec_thermal_CS_95(:) = mean(feedback.MOD_EQ_2_scaled,[1,2]);
-% vec_thermal_SIMULATE_95(:) = mean(feedback.STA_FLX2,[1,2]);
-% plot(h,vec_thermal_SIMULATE,"LineWidth",2)
-% plot(h,vec_thermal_CORESIM,"LineWidth",2)  
-% xlabel("Height (cm)",FontSize=22)
-% ylabel("Thermal neutron flux [cm^{-2}s^{-1}]",FontSize = 22)
-% legend("CORESIM 100%","SIMULATE 100%", FontSize = 12) 
-% ax2 = gca;
-% ax2.FontSize = 22;
-% saveas(Thermal_comp_100,"output_100_95/Thermal_comp_100.png");
-% saveas(Thermal_comp_100,"output_100_95/Thermal_comp_100.fig");
-% 
-% hold off
-% Thermal_comp_95 = figure('Position', get(0, 'Screensize'));
-% hold on
-% vec_thermal_CS_95(:) = mean(feedback.MOD_EQ_2_scaled,[1,2]);
-% vec_thermal_SIMULATE_95(:) = mean(feedback.STA_FLX2,[1,2]);
-% plot(h,vec_thermal_CS_95,"LineWidth",2)
-% plot(h,vec_thermal_SIMULATE_95,"LineWidth",2)
-% xlabel("Height (cm)",FontSize=22)
-% ylabel("Thermal neutron flux [cm^{-2}s^{-1}]",FontSize = 22)
-% legend("CORESIM 95%","SIMULATE 95%", FontSize = 12) 
-% ax2 = gca;
-% ax2.FontSize = 22;
-% saveas(Thermal_comp_95,"output_100_95/Thermal_comp_95.png");
-% saveas(Thermal_comp_95,"output_100_95/Thermal_comp_95.fig");
-% 
-% hold off
-% Fast_comp_100 = figure('Position', get(0, 'Screensize'));
-% hold on
-% vec_fast_CS_100(:) = mean(input.MOD_EQ_1_scaled,[1,2]);
-% vec_fast_SIMULATE_100(:) = mean(input.STA_FLX1,[1,2]);
-% plot(h,vec_fast_CS_100,"LineWidth",2)
-% plot(h,vec_fast_SIMULATE_100,"LineWidth",2)
-% xlabel("Height (cm)",FontSize=22)
-% ylabel("Fast neutron flux [cm^{-2}s^{-1}]",FontSize = 22)
-% legend("CORESIM 100%","SIMULATE 100%", FontSize = 12) 
-% ax2 = gca;
-% ax2.FontSize = 22;
-% saveas(Fast_comp_100,"output_100_95/Fast_comp_100.png");
-% saveas(Fast_comp_100,"output_100_95/Fast_comp_100.fig");
-% 
-% hold off
-% Fast_comp_95 = figure('Position', get(0, 'Screensize'));
-% hold on
-% vec_fast_CS_95(:) = mean(feedback.MOD_EQ_1_scaled,[1,2]);
-% vec_fast_SIMULATE_95(:) = mean(feedback.STA_FLX1,[1,2]);
-% plot(h,vec_fast_CS_95,"LineWidth",2)
-% plot(h,vec_fast_SIMULATE_95,"LineWidth",2)
-% xlabel("Height (cm)",FontSize=22)
-% ylabel("Fast neutron flux [cm^{-2}s^{-1}]",FontSize = 22)
-% legend("CORESIM 95%","SIMULATE 95%", FontSize = 12) 
-% ax2 = gca;
-% ax2.FontSize = 22;
-% saveas(Fast_comp_95,"output_100_95/Fast_comp_95.png");
-% saveas(Fast_comp_95,"output_100_95/Fast_comp_95.fig");
-%%
-% test_var = G2_inner_product(MOD_adj(:,:,:,1),temp_FB_PHI(:,:,:,1),"vector","vector");
-% test_var_averaged = zeros(sizex/2,sizey/2,sizez/2);
-% for X = 1:sizex/2
-%     for Y = 1:sizey/2
-%         for Z = 1:sizez/2
-%             test_var_averaged(X,Y,Z) = mean(test_var(2*X-1:2*X,2*Y-1:2*Y,2*Z-1:2*Z),'all');
-%         end
-%     end
-% end
-% test_var_resized = repelem(test_var_averaged,2,2,2); 
-% analyse_3d_var(G2_inner_product(MOD_adj(:,:,:,1),temp_FB_PHI(:,:,:,1),"vector","vector"),"Inner product FB")
-% analyse_3d_var(test_var_resized,"Smoothed FB")

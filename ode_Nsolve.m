@@ -8,13 +8,15 @@ load data/tempFile
 %CR = zeros(M).*(t<=tc) + PHID_CR_PHI.*(t>tc); %control rod step function
 
 f = FunctionGen(M);
-ti=0; tf = 75*3600;
+%f = FunctionGen_nocoupling(M);
+ti=0; tf = 150*3600;
 tspan = [ti,tf];
-%IC = zeros(1,M*3);
+% IC = zeros(1,M*3);
 % MinValue = -5.9e+09;
 % MaxValue = 5.9e+09;
 % rng(1235482);
-%IC = MinValue + (MaxValue - MinValue) * rand(1,M*3); % set all values to random values between +-0.01% of the initial perturbation 1pcm of the equilibrium flux
+% IC = MinValue + (MaxValue - MinValue) * rand(1,M*3); % set all values to random values between +-0.01% of the initial perturbation 1pcm of the equilibrium flux
+%IC_values = 1E11 * [  4.4029   -2.9283    5.5014    5.6211    5.3118   -2.4537    2.0210    1.6172    5.7508    5.4815    2.8594    0.8657   -5.3484   -2.8468 3.7124    0.2117    3.6790   -3.7046    1.8795    4.0070   -4.3037    4.2582    1.5652    4.5605   -2.2567    3.9460    2.0000    4.5438  -3.2849   -0.0480];
 IC_values = 1E11 * [4.4029   -2.9283    5.5014    5.6211    5.3118   -2.4537    2.0210    1.6172    5.7508    5.4815    2.8594    0.8657   -5.3484   -2.8468    3.7124];
 symmetric_modes = [3,4];
 IC = IC_values;
