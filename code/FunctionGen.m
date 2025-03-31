@@ -3,9 +3,9 @@ function functionlist = FunctionGen(mend)
 strlist = strings(1,mend);
 for m = 1:mend
     %For each m make a new set of 3 equations
-    PhiString = sprintf('1/LAMBDA(%1$i)*(1/K_VALUE(1)-1/K_VALUE(%1$i))*s((%1$i-1)*3+1)',m);
-    IodineString=sprintf('gammaI/nu*PHID_F_PHI(%1$i)/PHID_PHI(%1$i)*s((%1$i-1)*3+1)-lambdaI*s((%1$i-1)*3+2)',m);
-    XenonString = sprintf('gammaX/nu*PHID_F_PHI(%1$i)/PHID_PHI(%1$i)*s((%1$i-1)*3+1)+lambdaI*s((%1$i-1)*3+2)-lambdaX*s((%1$i-1)*3+3)',m);
+    PhiString = sprintf('1/LAMBDA(%1$i)*(1/keff-1/K_VALUE(%1$i))*s((%1$i-1)*3+1)',m);
+    IodineString=sprintf('gammaI/NU*PHID_F_PHI(%1$i)/PHID_PHI(%1$i)*s((%1$i-1)*3+1)-lambdaI*s((%1$i-1)*3+2)',m);
+    XenonString = sprintf('gammaX/NU*PHID_F_PHI(%1$i)/PHID_PHI(%1$i)*s((%1$i-1)*3+1)+lambdaI*s((%1$i-1)*3+2)-lambdaX*s((%1$i-1)*3+3)',m);
     for n = 1:mend
         % Add new terms to each phi and xenon eqs for each equation
         newstr_P = sprintf(['+1/LAMBDA(%1$i)*PHID_FB_PHI(%1$i,%2$i)/PHID_F_PHI(%1$i)*s((%2$i-1)*3+1)' ...
