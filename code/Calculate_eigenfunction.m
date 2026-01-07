@@ -885,16 +885,13 @@ save(input_dir+"HELPER_data.mat","SHIFT_XYZ","SHIFT","SHIFT_XY","I_MAX","J_MAX",
     clear cwd
 
     keff=lambda(1);
-    FLX=X(:,1);
     fprintf('\nSAVING OF THE CALCULATED RESULTS IN PROGRESS.\n')
     MOD1=zeros(I_MAX,J_MAX,K_MAX,neigs);
     MOD2=zeros(I_MAX,J_MAX,K_MAX,neigs);
     MOD1_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
     MOD2_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
-    FLX1=zeros(I_MAX,J_MAX,K_MAX,neigs);
-    FLX2=zeros(I_MAX,J_MAX,K_MAX,neigs);
-    FLX1_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
-    FLX2_adj=zeros(I_MAX,J_MAX,K_MAX,neigs);
+    FLX1=zeros(I_MAX,J_MAX,K_MAX);
+    FLX2=zeros(I_MAX,J_MAX,K_MAX);
     EXT_S=0;
     for I=1:I_MAX
         for J=1:J_MAX
@@ -905,15 +902,15 @@ save(input_dir+"HELPER_data.mat","SHIFT_XYZ","SHIFT","SHIFT_XY","I_MAX","J_MAX",
                         MOD2(I,J,K,n)=X(CONV(I,J,K)+SHIFT_XYZ,n);
                         MOD1_adj(I,J,K,n)=X_adj(CONV(I,J,K),n);
                         MOD2_adj(I,J,K,n)=X_adj(CONV(I,J,K)+SHIFT_XYZ,n);
-                        FLX1(I,J,K)=abs(MOD1(I,J,K,1));
-                        FLX2(I,J,K)=abs(MOD2(I,J,K,1));
+                        % FLX1(I,J,K)=abs(MOD1(I,J,K,1));
+                        % FLX2(I,J,K)=abs(MOD2(I,J,K,1));
                     end
                 end
             end
         end
     end
-    FUM1 = FLX1;
-    FUM2 = FLX2;
+    FLX1(:,:,:)=abs(MOD1(:,:,:,1));
+    FLX2(:,:,:)=abs(MOD2(:,:,:,1));
     lambda_tmp=lambda;
     clear lambda
     lambda=lambda_tmp(1:neigs);

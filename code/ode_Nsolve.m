@@ -9,7 +9,7 @@ load(input_dir+"PARAMETERS_data.mat")
 %CR = zeros(M).*(t<=tc) + PHID_CR_PHI.*(t>tc); %control rod step function
 
 f = FunctionGen(M);
-ti=0; tf = 150*3600;
+ti=0; tf = 200*3600;
 tspan = [ti,tf];
 
 % IC = zeros(1,M*3);
