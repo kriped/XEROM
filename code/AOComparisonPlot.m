@@ -11,15 +11,15 @@ AO_mscnpp = data.AOplotting.AO_mscnpp;
 figure; clf; hold off
 
 % Plot AO vs time
-plot(t_xerom(opts.plotting.skip:end), AO_xerom(opts.plotting.skip:end), 'LineWidth', 2);
+plot(t_xerom, AO_xerom, 'LineWidth', opts.plotting.LineWidth);
 hold on
-plot(t_mscnpp(opts.plotting.skip:end),AO_mscnpp(opts.plotting.skip:end), 'LineWidth', 2)
-xlabel('Time');
-ylabel('AO');
+plot(t_mscnpp,AO_mscnpp, 'LineWidth', opts.plotting.LineWidth)
+xlabel('Time','FontSize',opts.plotting.FontSize);
+ylabel('AO',opts.plotting.FontSize);
 tlim = min(t_mscnpp(end),t_xerom(end));
 xlim([0,tlim]);
 ylim([-1.2,1.2])
-legend("XEROM","MScNPP")
+legend("XEROM","MScNPP",fontsize=opts.plotting.FontSize)
 grid on;
 
 % Save the plot to the specified results directory

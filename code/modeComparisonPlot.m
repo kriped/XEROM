@@ -38,10 +38,10 @@ for mode = 1:M
     L_mscnpp = length(mode_amplitude_mscnpp);
     t_mscnpp_i = t_mscnpp(1:L_mscnpp,mode);
     %plot(mode_time, mode_amplitude, "LineWidth", 2)
-    plot(t_xerom_i(opts.plotting.skip:end), mode_amplitude_xerom(opts.plotting.skip:end), "LineWidth", opts.plotting.LineWidth)
+    plot(t_xerom_i, mode_amplitude_xerom, "LineWidth", opts.plotting.LineWidth)
     hold on
     %plot(mode_time_ref, mode_amplitude_ref, "LineWidth", 2);
-    plot(t_mscnpp_i(opts.plotting.skip:end), mode_amplitude_mscnpp(opts.plotting.skip:end), "LineWidth", opts.plotting.LineWidth);
+    plot(t_mscnpp_i, mode_amplitude_mscnpp, "LineWidth", opts.plotting.LineWidth);
     tlim = min(t_mscnpp_i(end),t_xerom_i(end));
     xlim([0,tlim]);
     ylim([-1.2,1.2])

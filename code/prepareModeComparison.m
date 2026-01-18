@@ -28,9 +28,9 @@ for i = 1:N_modes
     tx_seg = tX(opts.skip_xerom+1:end)- tx_skip;
     tr_seg = tR(opts.skip_mscnpp+1:end)-tr_skip;
     %x_seg = X(opts.skip_xerom+1:end,i);
-    r_detrendResults = detrend(tr_seg,R(opts.skip_mscnpp+1:end,i),opts.modefit);
+    r_detrendResults = detrend(tr_seg,R(opts.skip_mscnpp+1:end,i),opts.modefit_mscnpp);
     r_seg = r_detrendResults.detrended; % Store the detrended segment for further processing
-    x_detrendResults = detrend(tx_seg,X(opts.skip_mscnpp+1:end,i),opts.modefit);
+    x_detrendResults = detrend(tx_seg,X(opts.skip_mscnpp+1:end,i),opts.modefit_xerom);
     x_seg = x_detrendResults.detrended; % Store the detrended segment for further processing
     
     [x_seg, tx_seg] = cutAtZeroCrossing(x_seg, tx_seg, opts.modeplot.n_zero_xerom);
