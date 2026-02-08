@@ -1,7 +1,7 @@
 function data = modifyData(data, opts)
 
     
-    skip_xerom = opts.skip_xerom; skip_mscnpp = opts.skip_mscnpp; jump = opts.jump_xerom;
+    jump = opts.jump_xerom;
     
     data.DV = data.DX*data.DY*data.DZ;    
     data.sizex = size(data.xerom.MOD1,1);
@@ -14,7 +14,9 @@ function data = modifyData(data, opts)
     reduced_time_hours = reduced_time_hours - reduced_time_hours(1);
     data.xerom.reduced_time_hours = reduced_time_hours;
     data.mscnpp.t_hours = data.mscnpp.t/3600;
-
+    
+    data.top_indices = (data.sizez/2+1):data.sizez;
+    data.bottom_indices = 1:(data.sizez/2);
     KFIS1 = (1/data.NU) * data.NUFIS1 .* data.KAPPA1;
     KFIS2 = (1/data.NU) * data.NUFIS2 .* data.KAPPA2;
     FIS1 = (1/data.NU) * data.NUFIS1 ;
@@ -36,6 +38,18 @@ function data = modifyData(data, opts)
     data.mscnpp.DFLX2 = data.mscnpp.FLX2 - data.FLX2_EQ_scaled;
     data.mscnpp.DFLX = cat(1,data.mscnpp.DFLX1,data.mscnpp.DFLX2);
     data.mscnpp.a = computeModalAmplitudes(data.mscnpp.DFLX, MOD);
+    data.mscnpp.mean_xenon = mean(data.mscnpp.Xe135,[1, 2, 3]);
+    tot_xenon(:) = sum(data.mscnpp.Xe135,[1, 2, 3]);
+    upper_xenon(:) = sum(data.mscnpp.Xe135(:,:,data.top_indices,:),[1, 2, 3]);
+    lower_xenon(:) = sum(data.mscnpp.Xe135(:,:,data.bottom_indices,:),[1, 2, 3]);
+    data.mscnpp.upper_xenon_norm = upper_xenon./tot_xenon;
+    data.mscnpp.lower_xenon_norm = lower_xenon./tot_xenon;
+    data.mscnpp.mean_iodine = mean(data.mscnpp.I135,[1, 2, 3]);
+    tot_iodine = sum(data.mscnpp.I135,[1, 2, 3]);
+    upper_iodine(:) = sum(data.mscnpp.I135(:,:,data.top_indices,:),[1, 2, 3]);
+    lower_iodine(:) = sum(data.mscnpp.I135(:,:,data.bottom_indices,:),[1, 2, 3]);
+    data.mscnpp.upper_iodine_norm = upper_iodine./tot_iodine;
+    data.mscnpp.lower_iodine_norm = lower_iodine./tot_iodine;
 
     neutron_mode_indices = ((1:data.M)-1)*3 + 1; % neutron entries in state vector
     iodine_mode_indices = ((1:data.M)-1)*3 + 2; % iodine entries in state vector

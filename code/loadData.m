@@ -5,9 +5,9 @@ function [data] = loadData(inputDir, resultsDir, refPath)
     [data.DX,data.DY,data.DZ] = deal(s.DX,s.DY,s.DZ);
     
     filePath = fullfile(resultsDir,"RESULTS_HET.mat");
-    s = load(filePath,"state_values_2G","time_2G");
+    s = load(filePath,"state_values_2G","time_2G",'X0','I0');
     data.xerom.state_values_2G = s.state_values_2G;
-    data.xerom.time_2G = s.time_2G;
+    data.xerom.time_2G = s.time_2G; data.xerom.I0 = s.I0; data.xerom.X0 = s.X0;
 
     filePath = fullfile(inputDir,"RESULTS.mat");
     s = load(filePath,"MOD1","MOD2","keff");

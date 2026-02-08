@@ -10,15 +10,15 @@ function XEROM(CASE,BURNUP)
 % USERS_GUIDE.PDF in the directory "manuals".
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-INPUT_REFINEMENT0_dir = sprintf("../input/%s/%s/Refinement0/",CASE,BURNUP);
+%INPUT_REFINEMENT0_dir = sprintf("../input/%s/%s/Refinement0/",CASE,BURNUP);
 INPUT_REFINEMENT1_dir = sprintf("../input/%s/%s/Refinement1/",CASE,BURNUP);
-RESULTS_REFINEMENT0_dir = sprintf("../results/%s/%s/Refinement0/",CASE,BURNUP);
-RESULTS_REFINEMENT1_dir = sprintf("../results/%s/%s/Refinement1/",CASE,BURNUP);
+%RESULTS_REFINEMENT0_dir = sprintf("../results/%s/%s/Refinement0/",CASE,BURNUP);
+RESULTS_REFINEMENT1_dir = sprintf("../results/%s/%s/",CASE,BURNUP);
 
 %Check data files are present
 input_files = ["XS_data.mat","RESULTS.mat","POWER_data.mat","GEOM_data.mat","FEEDBACK_data.mat"];
 for file = input_files
-    if ~exist(sprintf(INPUT_REFINEMENT1_dir+file),"file")
+    if ~exist(fullfile(INPUT_REFINEMENT1_dir,file),"file")
         error("%s/%s was not found",INPUT_REFINEMENT1_dir,file)
     end
 end
@@ -218,7 +218,6 @@ clearvars temp*
 if ~exist(RESULTS_REFINEMENT1_dir,"dir")
     mkdir(RESULTS_REFINEMENT1_dir)
 end
-C11
-save(RESULTS_REFINEMENT1_dir+"RESULTS_HET.mat","state_values_2G","time_2G")
+save(RESULTS_REFINEMENT1_dir+"RESULTS_HET.mat","state_values_2G","time_2G","X0","I0")
 
 end

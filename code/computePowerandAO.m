@@ -41,9 +41,8 @@ DV = data.DV;
 
     %% Calculate power   
     
-    sizez =  size(DFLX1_xerom,3);
-    top_indices = (sizez/2+1):sizez;
-    bottom_indices = 1:(sizez/2);
+    top_indices = data.top_indices;
+    bottom_indices = data.bottom_indices;
     n_timesteps_xerom = size(DFLX1_xerom,4);
     n_timesteps_mscnpp = size(DFLX1_mscnpp,4); 
     KFIS1_expanded = repmat(KFIS1,[1,1,1,n_timesteps_xerom]);
