@@ -37,16 +37,15 @@ function data = prepareAOComparison(data,opts)
     [xp, sx] = sort(xp,'descend'); xl = xl(sx); txp = tx_seg(xl);
     [rp, sr] = sort(rp,'descend'); rl = rl(sr); trp = tr_seg(rl);
 
-    L = min(length(x_seg),length(r_seg));
     % Trim the data to remove the trailing zeros
     x_seg = x_seg(x_seg ~= 0);
     r_seg = r_seg(r_seg ~= 0);
     tx_seg = tx_seg(1:length(x_seg));
     tr_seg = tr_seg(1:length(r_seg));
-    data.AOplotting.AO_xerom = x_seg(1:L) / xp(opts.AOplot.n_peak_xerom);
-    data.AOplotting.AO_mscnpp = r_seg(1:L) / rp(opts.AOplot.n_peak_mscnpp);
-    data.AOplotting.xerom_t = tx_seg(1:L);
-    data.AOplotting.mscnpp_t = tr_seg(1:L);
+    data.AOplotting.AO_xerom = x_seg / xp(opts.AOplot.n_peak_xerom);
+    data.AOplotting.AO_mscnpp = r_seg / rp(opts.AOplot.n_peak_mscnpp);
+    data.AOplotting.xerom_t = tx_seg;
+    data.AOplotting.mscnpp_t = tr_seg;
     data.AOfit.xerom_frequency = x_detrendResults.frequency;
     data.AOfit.xerom_alpha     = x_detrendResults.alpha;
     data.AOfit.mscnpp_frequency = r_detrendResults.frequency;

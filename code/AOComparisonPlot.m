@@ -11,9 +11,13 @@ AO_mscnpp = data.AOplotting.AO_mscnpp;
 figure; clf; hold off
 
 % Plot AO vs time
-plot(t_xerom, AO_xerom, 'LineWidth', opts.plotting.LineWidth);
+t_end = min(t_mscnpp(end),t_xerom(end));
+%Find indexs of L
+L_xerom = find(t_xerom <= t_end, 1, 'last');
+L_mscnpp = find(t_mscnpp <= t_end,1,'last');
+plot(t_xerom(1:L_xerom), AO_xerom(1:L_xerom), 'LineWidth', opts.plotting.LineWidth);
 hold on
-plot(t_mscnpp,AO_mscnpp, 'LineWidth', opts.plotting.LineWidth)
+plot(t_mscnpp(1:L_mscnpp),AO_mscnpp(1:L_mscnpp), 'LineWidth', opts.plotting.LineWidth)
 xlabel('Time','FontSize',opts.plotting.FontSize);
 ylabel('AO',opts.plotting.FontSize);
 tlim = min(t_mscnpp(end),t_xerom(end));
