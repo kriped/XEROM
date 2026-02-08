@@ -3,11 +3,11 @@
 % It performs the following tasks:
 
 % 1. Sets options for data processing, including fitting parameters and plotting options.
-opts = importOpts();
+opts        = importOpts();
 %% Set up paths for input and output directories
-inputDir = fullfile(opts.path.INPUTBASEPATH, opts.path.CASE, opts.path.BURNUP ,"Refinement1/");
-outputDir = fullfile(opts.path.OUTPUTBASEPATH, opts.path.CASE, opts.path.BURNUP );% 2. Sets up paths for input and output directories.
-referenceDir = fullfile(opts.path.MSCNPPPATH, opts.path.BURNUP,"results_R4C38_Refinement1_EOC_25_percent_long.mat");
+inputDir    = fullfile(opts.path.INPUTBASEPATH, opts.path.CASE, opts.path.BURNUP ,"Refinement1/");
+outputDir   = fullfile(opts.path.OUTPUTBASEPATH, opts.path.CASE, opts.path.BURNUP );% 2. Sets up paths for input and output directories.
+referenceDir= fullfile(opts.path.MSCNPPPATH, opts.path.BURNUP,"results_R4C38_Refinement1_EOC_25_percent_long.mat");
 %% 3. Loads the necessary data from the specified directories.
 data = loadData(inputDir,outputDir,referenceDir);
 %% 4. Modifies the loaded data according to the specified options.
@@ -35,3 +35,6 @@ modeComparisonPlot(data,outputDir,opts);
 powerComparisonPlot(data,outputDir,opts);
 %% 14. Generates Plots for AO comparison
 AOComparisonPlot(data,outputDir,opts);
+%% 15. Generates Plots for Iodine comparison
+IodineComparisonPlot
+%% 16. Generates Plots for Xenon comparison
