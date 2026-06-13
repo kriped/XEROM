@@ -1,8 +1,6 @@
 function data = modifyData(data, opts)
-
-    
     jump = opts.jump_xerom;
-    
+
     data.DV = data.DX*data.DY*data.DZ;    
     data.sizex = size(data.xerom.MOD1,1);
     data.sizey = size(data.xerom.MOD1,2);

@@ -14,6 +14,7 @@ function results = detrend(t, y,opts)
 %            .c0      - Intercept guess (default: "Default")
 %            .c1      - Slope guess (default: "Default")
 %            .showPlot - Boolean to display plots (default: false)
+%            .name     string containing the plot name
 %
 % Outputs:
 %   results - Structure containing:
@@ -22,11 +23,11 @@ function results = detrend(t, y,opts)
 %             .linTrend    - Linear trend component
 %             .slope      - Slope of the linear trend
 %             .intersect  - Intercept of the linear trend
-    [y_detrended, modelFit, params,linTrend] = detrend_damped_sinusoid(t,y,opts);
+    [y_detrended, modelFit, params,linTrend,resnorm,residual] = detrend_damped_sinusoid(t,y,opts);
 
     % Plots
     if opts.showPlot
-        figure('Name','Trend analysis','Color','w');
+        figure('Name',opts.name,'Color','w');
         tiledlayout(2,2, 'Padding','compact','TileSpacing','compact');
 
         nexttile;
@@ -43,7 +44,7 @@ function results = detrend(t, y,opts)
         nexttile;
         plot(t, y_detrended, 'g-', 'LineWidth', 1); hold on
         yline(0, 'k-'); grid on;
-        plot(t,modelFit-linTrend,'m.','LineWidth',1);
+        scatter(t, modelFit(:) - linTrend(:), 10, 'm', 'filled');
         xlabel('Time'); ylabel('Detrended signal');
         title('Detrended (should oscillate around 0)');
         legend('Detrended signal', 'Fit minus linear trend');
@@ -61,13 +62,17 @@ function results = detrend(t, y,opts)
     results.alpha            = params(2);
     results.slope            = params(6); % per unit time
     results.intersect        = params(5);
+    results.resnorm          = resnorm;
+    results.residual         = residual;
 end
 
 
 
 
-function [y_detrended, modelFit, params,linTrend] = detrend_damped_sinusoid(t, y,opts)
-
+function [y_detrended, modelFit, params,linTrend,RESNORM,RESIDUAL] = detrend_damped_sinusoid(t, y,opts)
+%    t = t(opts.skip:end);
+%    y = y(opts.skip:end);
+    
     % ----- Initial guesses -----
     % Frequency guess via FFT peak
     if num2str(opts.f0) == "Default"
@@ -77,26 +82,55 @@ function [y_detrended, modelFit, params,linTrend] = detrend_damped_sinusoid(t, y
     else
         f0 = opts.f0;
     end
+
+    if num2str(opts.fL) == "Default"
+        fL = 0.01;
+    else
+        fL = opts.fL;
+    end
+
+    if num2str(opts.fU) == "Default"
+        fU = 0.1;
+    else
+        fU = opts.fU;
+    end
+
     if num2str(opts.A0) == "Default"
         A0 = (max(y) - min(y)) / 2;   % amplitude guess
     else
         A0 = opts.A0;
     end
+
     if num2str(opts.alpha0) == "Default"
-        alpha0 = 0.01;                % slow decay guess
+        alpha0 = -0.01;                % slow decay guess
     else 
         alpha0 = opts.alpha0;
     end
+
+    if num2str(opts.alphaU) == "Default"
+        alphaU = 0;                % upper bound for decay rate guess
+    else
+        alphaU = opts.alphaU;
+    end
+
+    if num2str(opts.alphaL) == "Default"
+        alphaL = -1.0;                % lower bound for decay rate guess
+    else
+        alphaL = opts.alphaL;
+    end
+
     if num2str(opts.phi0) == "Default"
         phi0 = 0;                     % phase guess
     else
         phi0 = opts.phi0;
     end
+
     if num2str(opts.c0) == "Default"
         c0 = mean(y);                 % intercept guess
     else
         c0 = opts.c0;
     end
+
     if num2str(opts.c1) == "Default"
         c1 = 0;                       % slope guess
     else
@@ -112,15 +146,17 @@ function [y_detrended, modelFit, params,linTrend] = detrend_damped_sinusoid(t, y
 
     % ----- Nonlinear least squares fit -----
     opts = optimoptions('lsqcurvefit','Display','off');
-    lb = [-inf,      -5e-2,      1e-4,   -2*pi, -Inf, -1e4];
-    ub = [Inf,  1e-2,  0.1,    2*pi,  Inf,  1e4];
+    lb = [-inf,      alphaL,      fL,   -2*pi, -Inf, -1e4];
+    ub = [Inf,  alphaU,  fU,    2*pi,  Inf,  1e4];
 
-    params = lsqcurvefit(modelFun, p0, t(:), y(:), lb, ub, opts);
+    [params,RESNORM,RESIDUAL] = lsqcurvefit(modelFun, p0, t(:), y(:), lb, ub, opts);
 
     % ----- Extract model fit -----
     modelFit = modelFun(params, t(:));
     linTrend = params(5)+params(6)*t;
     % ----- Detrended signal -----
     y_detrended = y(:) - linTrend(:);
+
+
 
 end

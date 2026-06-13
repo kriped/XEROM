@@ -24,7 +24,7 @@ for file = input_files
 end
 
 %% Load Xerom_data
-load(INPUT_REFINEMENT1_dir+"GEOM_data.mat");
+load(INPUT_REFINEMENT1_dir+"GEOM_data.mat","DX","DY","DZ");
 load(INPUT_REFINEMENT1_dir+"RESULTS.mat","MOD1","MOD2","MOD1_adj","MOD2_adj","lambda");
 load(INPUT_REFINEMENT1_dir+"POWER_data.mat","KAPPA1","KAPPA2","REFERENCE_POWER");
 load(INPUT_REFINEMENT1_dir+"XS_data.mat");

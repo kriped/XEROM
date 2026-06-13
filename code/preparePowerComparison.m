@@ -11,46 +11,52 @@ function data = preparePowerComparison(data,opts)
     % Outputs:
     %   t_shifted, signal_shifted       - shifted signal
     %   t_ref_shifted, reference_shifted- shifted reference
-
+    skip_xerom  = opts.skip_xerom;
+    skip_mscnpp = opts.skip_mscnpp;
     %Extract data
-    X = data.xerom.power;
-    R = data.mscnpp.power_signal;
-    tX = data.xerom.reduced_time_hours;
-    tR = data.mscnpp.t_hours;
+    x_seg       = data.xerom.power(skip_xerom+1:end);
+    r_seg       = data.mscnpp.power_signal(skip_mscnpp+1:end);
+    t_skip      = data.xerom.reduced_time_hours(skip_xerom+1);
+    tX          = data.xerom.reduced_time_hours(skip_xerom+1:end)-t_skip;
+    t_skip      = data.mscnpp.t_hours(skip_mscnpp);
+    tR          = data.mscnpp.t_hours(skip_mscnpp+1:end)-t_skip;
 
-    tx_skip = tX(opts.skip_xerom);
-    tr_skip = tR(opts.skip_mscnpp);
-    tx_seg = tX(opts.skip_xerom+1:end)- tx_skip;
-    tr_seg = tR(opts.skip_mscnpp+1:end)-tr_skip;
-    %x_seg = X(opts.skip_xerom+1:end);
-    r_detrendResults = detrend(tr_seg,R(opts.skip_mscnpp+1:end),opts.powerfit_mscnpp);
-    r_seg = r_detrendResults.detrended; % Store the detrended segment for further processing
-    x_detrendResults = detrend(tx_seg,X(opts.skip_xerom+1:end),opts.powerfit_xerom);
-    x_seg = x_detrendResults.detrended;
+    %Normalise x_seg and r_seg
+    % Normalize the segments
+    %x_seg = x_seg / norm(x_seg);
+    %r_seg = r_seg / norm(r_seg);
 
-    [x_seg, tx_seg] = cutAtZeroCrossing(x_seg, tx_seg, opts.powerplot.n_zero_xerom);
-    [r_seg,tr_seg] = cutAtZeroCrossing(r_seg, tr_seg, opts.powerplot.n_zero_mscnpp);
+    x_detrendResults    = detrend(tX,x_seg,opts.powerfit_xerom);
+    x_seg               = x_detrendResults.detrended;
+    r_detrendResults    = detrend(tR,r_seg,opts.powerfit_mscnpp);
+    r_seg               = r_detrendResults.detrended; % Store the detrended segment for further processing
+  
+    [x_seg, tx_seg]     = cutAtZeroCrossing(x_seg, tX, opts.powerplot.n_zero_xerom);
+    [r_seg,tr_seg]      = cutAtZeroCrossing(r_seg, tR, opts.powerplot.n_zero_mscnpp);
+
+    x_detrendResults    = detrend(tx_seg,x_seg,opts.powerfit_xerom);
+    x_seg               = x_detrendResults.detrended;    
+    r_detrendResults    = detrend(tr_seg,r_seg,opts.powerfit_mscnpp);
+    r_seg               = r_detrendResults.detrended; % Store the detrended segment for further processing
     
     [x_seg, tx_seg, r_seg, tr_seg] = alignModes(x_seg, tx_seg, r_seg, tr_seg, ...
                                                 opts.powerplot.n_peak_xerom, opts.powerplot.n_peak_mscnpp);
 
-
-
         % Save peak lists for global comparison
-    [xp,xl] = findpeaks(x_seg); 
-    [rp,rl] = findpeaks(r_seg); 
+    [xp,~]     = findpeaks(x_seg); 
+    [rp,~]     = findpeaks(r_seg); 
     % Sort peaks
-    [xp, sx] = sort(xp,'descend'); xl = xl(sx); txp = tx_seg(xl);
-    [rp, sr] = sort(rp,'descend'); rl = rl(sr); trp = tr_seg(rl);
+    [xp, ~ ]    = sort(xp,'descend'); %xl = xl(sx); %txp = tx_seg(xl);
+    [rp, ~]    = sort(rp,'descend'); %rl = rl(sr); %trp = tr_seg(rl);
 
     % L = min(length(x_seg),length(r_seg));
+    data.powerplotting.xerom_power  = x_seg / xp(opts.powerplot.n_peak_xerom);
     data.powerplotting.mscnpp_power = r_seg / rp(1);
-    data.powerplotting.xerom_power = x_seg / xp(opts.powerplot.n_peak_xerom);
-    data.powerplotting.t_xerom = tx_seg;
-    data.powerplotting.t_mscnpp = tr_seg;
-    data.powerfit.xerom_frequency = x_detrendResults.frequency;
-    data.powerfit.xerom_alpha     = x_detrendResults.alpha;
-    data.powerfit.mscnpp_frequency = r_detrendResults.frequency;
-    data.powerfit.mscnpp_alpha    = r_detrendResults.alpha;
+    data.powerplotting.t_xerom      = tx_seg;
+    data.powerplotting.t_mscnpp     = tr_seg;
+    data.powerfit.xerom_frequency   = x_detrendResults.frequency;
+    data.powerfit.xerom_alpha       = x_detrendResults.alpha;
+    data.powerfit.mscnpp_frequency  = r_detrendResults.frequency;
+    data.powerfit.mscnpp_alpha      = r_detrendResults.alpha;
 end
 

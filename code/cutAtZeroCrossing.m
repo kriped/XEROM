@@ -5,6 +5,6 @@ function [seg, tseg] = cutAtZeroCrossing(vec, tvec, n_zero)
     else
         start = z(min(n_zero,length(z))) + 1;
     end
-    seg = vec(start:end);
-    tseg = tvec(start:end) - tvec(start);
+    seg = vec(start+1:end);
+    tseg = tvec(start+1:end) - tvec(start);
 end

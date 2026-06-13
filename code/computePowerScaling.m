@@ -28,22 +28,28 @@ function data = computePowerScaling(data,opts)
 %   This function processes the power data from two signals (XEROM and MScNPP),
 %   detrends the data, identifies peaks, and computes a scaling factor based on
 %   the specified peaks. The scaling factor is then stored in the output data struct.
-
+skip_xerom = opts.skip_xerom;
+skip_mscnpp = opts.skip_mscnpp;
 xerom_Dpower = data.xerom.Dpower;
 mscnpp_Dpower = data.mscnpp.Dpower;
-tX = data.xerom.reduced_time_hours;
-tR = data.mscnpp.t_hours;
 X = xerom_Dpower;
 R = mscnpp_Dpower;
-tx_seg = tX(opts.skip_xerom+1:end)-tX(opts.skip_xerom);
-tr_seg = tR(opts.skip_mscnpp+1:end)-tR(opts.skip_mscnpp);
+tX = data.xerom.reduced_time_hours;
+tR = data.mscnpp.t_hours;
+
+
+tx_seg = tX(skip_xerom+1:end)-tX(skip_xerom);
+tr_seg = tR(skip_mscnpp+1:end)-tR(skip_mscnpp);
+
 %x_seg = X(opts.skip_xerom+1:end);
-r_detrendResults = detrend(tr_seg,R(opts.skip_mscnpp+1:end),opts.powerfit_mscnpp);
+r_detrendResults = detrend(tr_seg,R(skip_mscnpp+1:end),opts.powerfit_mscnpp);
 r_seg = r_detrendResults.detrended; % Store the detrended segment for further processing
-x_detrendResults = detrend(tx_seg,X(opts.skip_xerom+1:end),opts.powerfit_mscnpp);
-x_seg = x_detrendResults.detrended;    
+x_detrendResults = detrend(tx_seg,X(skip_xerom+1:end),opts.powerfit_xerom);
+x_seg = x_detrendResults.detrended;
+
 [x_seg, tx_seg] = cutAtZeroCrossing(x_seg, tx_seg, opts.powerplot.n_zero_xerom);
 [r_seg,tr_seg] = cutAtZeroCrossing(r_seg, tr_seg, opts.powerplot.n_zero_mscnpp);
+
 [xerom_Dpower, ~, mscnpp_Dpower, ~] = alignModes(x_seg, tx_seg, r_seg, tr_seg, ...
     opts.powerplot.n_peak_xerom, opts.powerplot.n_peak_mscnpp);
 % --- 1. Find peaks in both signals ---

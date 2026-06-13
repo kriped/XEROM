@@ -16,6 +16,7 @@ plot(t_mscnpp, power_mscnpp, "LineWidth", opts.plotting.LineWidth)
 tlim = min(t_mscnpp(end),t_xerom(end));
 xlim([0,tlim]);
 ylim([-1.2,1.2])
+pbaspect([4,3,1])
 grid on
 xlabel("Time (h)", "FontSize", opts.plotting.FontSize)
 ylabel("Power (AU)", "FontSize", opts.plotting.FontSize)

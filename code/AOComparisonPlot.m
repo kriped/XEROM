@@ -19,10 +19,11 @@ plot(t_xerom(1:L_xerom), AO_xerom(1:L_xerom), 'LineWidth', opts.plotting.LineWid
 hold on
 plot(t_mscnpp(1:L_mscnpp),AO_mscnpp(1:L_mscnpp), 'LineWidth', opts.plotting.LineWidth)
 xlabel('Time','FontSize',opts.plotting.FontSize);
-ylabel('AO',opts.plotting.FontSize);
+ylabel('AO','FontSize',opts.plotting.FontSize);
 tlim = min(t_mscnpp(end),t_xerom(end));
 xlim([0,tlim]);
 ylim([-1.2,1.2])
+pbaspect([4,3,1])
 legend("XEROM","MScNPP",fontsize=opts.plotting.FontSize)
 grid on;
 
