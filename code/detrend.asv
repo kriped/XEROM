@@ -58,10 +58,8 @@ function results = detrend(t, y,opts)
     results.detrended        = y_detrended;
     results.modelFit         = modelFit;
     results.linTrend         = linTrend;
-    results.amplitude        = params(1);
     results.frequency        = params(3);
     results.alpha            = params(2);
-    results.phase            = params(4);
     results.slope            = params(6); % per unit time
     results.intersect        = params(5);
     results.resnorm          = resnorm;
@@ -84,77 +82,45 @@ function [y_detrended, modelFit, params,linTrend,RESNORM,RESIDUAL] = detrend_dam
     else
         f0 = opts.f0;
     end
-
     if num2str(opts.fL) == "Default"
-        fL = 0.01;
+        opts.f0.01;
     else
-        fL = opts.fL;
+        f0 = opts.fL;
     end
-
-    if num2str(opts.fU) == "Default"
-        fU = 0.1;
-    else
-        fU = opts.fU;
-    end
-
-    %if num2str(opts.A0) == "Default"
-     %   A0 = (max(y) - min(y)) / 2;   % amplitude guess
-    %else
-    %    A0 = opts.A0;
-    %end
-
     if num2str(opts.A0) == "Default"
-        A0 = max(abs(y));   % amplitude guess
+        A0 = (max(y) - min(y)) / 2;   % amplitude guess
     else
         A0 = opts.A0;
     end
-
     if num2str(opts.alpha0) == "Default"
         alpha0 = -0.01;                % slow decay guess
     else 
         alpha0 = opts.alpha0;
     end
-
     if num2str(opts.alphaU) == "Default"
         alphaU = 0;                % upper bound for decay rate guess
     else
         alphaU = opts.alphaU;
     end
-
     if num2str(opts.alphaL) == "Default"
-        alphaL = -0.15;                % lower bound for decay rate guess
+        alphaL = -1.0;                % lower bound for decay rate guess
     else
         alphaL = opts.alphaL;
     end
-
     if num2str(opts.phi0) == "Default"
         phi0 = 0;                     % phase guess
     else
         phi0 = opts.phi0;
     end
-
     if num2str(opts.c0) == "Default"
         c0 = mean(y);                 % intercept guess
-    elseif  num2str(opts.c0) == "End"
-        c0 = y(end);
     else
         c0 = opts.c0;
     end
-
     if num2str(opts.c1) == "Default"
         c1 = 0;                       % slope guess
     else
         c1 = opts.c1;
-    end
-    if num2str(opts.c1U) == "Default"
-        c1U = 0.05;
-    else
-        c1U = opts.c1U;
-    end
-    if num2str(opts.c1U) == "Default"
-        c1L = 0.025;
-    else
-        c1L = opts.c1L;
     end
     
     p0 = [A0, alpha0, f0, phi0, c0, c1];
@@ -166,8 +132,8 @@ function [y_detrended, modelFit, params,linTrend,RESNORM,RESIDUAL] = detrend_dam
 
     % ----- Nonlinear least squares fit -----
     opts = optimoptions('lsqcurvefit','Display','off');
-    lb = [-inf,      alphaL,      fL,   -2*pi, -Inf, c1L];
-    ub = [Inf,  alphaU,  fU,    2*pi,  Inf,  c1U];
+    lb = [-inf,      alphaL,      1e-4,   -2*pi, -Inf, -1e4];
+    ub = [Inf,  alphaU,  0.1,    2*pi,  Inf,  1e4];
 
     [params,RESNORM,RESIDUAL] = lsqcurvefit(modelFun, p0, t(:), y(:), lb, ub, opts);
 

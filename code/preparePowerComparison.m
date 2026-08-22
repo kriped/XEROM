@@ -13,13 +13,15 @@ function data = preparePowerComparison(data,opts)
     %   t_ref_shifted, reference_shifted- shifted reference
     skip_xerom  = opts.skip_xerom;
     skip_mscnpp = opts.skip_mscnpp;
+    skip_mscnpp = skip_mscnpp+30; % amount of points to be removed at the beginning of the signal.
+    skip_end_mscnpp = 90; % Amount of point to be removed at the tail of the signal.
     %Extract data
     x_seg       = data.xerom.power(skip_xerom+1:end);
-    r_seg       = data.mscnpp.power_signal(skip_mscnpp+1:end);
+    r_seg       = data.mscnpp.power_signal(skip_mscnpp+1:end-skip_end_mscnpp);
     t_skip      = data.xerom.reduced_time_hours(skip_xerom+1);
     tX          = data.xerom.reduced_time_hours(skip_xerom+1:end)-t_skip;
-    t_skip      = data.mscnpp.t_hours(skip_mscnpp);
-    tR          = data.mscnpp.t_hours(skip_mscnpp+1:end)-t_skip;
+    t_skip      = data.mscnpp.t_hours(skip_mscnpp+1);
+    tR          = data.mscnpp.t_hours(skip_mscnpp+1:end-skip_end_mscnpp)-t_skip;
 
     %Normalise x_seg and r_seg
     % Normalize the segments
@@ -51,12 +53,16 @@ function data = preparePowerComparison(data,opts)
 
     % L = min(length(x_seg),length(r_seg));
     data.powerplotting.xerom_power  = x_seg / xp(opts.powerplot.n_peak_xerom);
-    data.powerplotting.mscnpp_power = r_seg / rp(1);
+    data.powerplotting.mscnpp_power = r_seg / rp(opts.powerplot.n_peak_mscnpp);
     data.powerplotting.t_xerom      = tx_seg;
     data.powerplotting.t_mscnpp     = tr_seg;
     data.powerfit.xerom_frequency   = x_detrendResults.frequency;
     data.powerfit.xerom_alpha       = x_detrendResults.alpha;
+    data.powerfit.xerom_amplitude   = x_detrendResults.amplitude;
+    data.powerfit.xerom_phase       = x_detrendResults.phase;
     data.powerfit.mscnpp_frequency  = r_detrendResults.frequency;
     data.powerfit.mscnpp_alpha      = r_detrendResults.alpha;
+    data.powerfit.mscnpp_amplitude  = r_detrendResults.amplitude;               
+    data.powerfit.mscnpp_phase      = r_detrendResults.phase;
 end
 

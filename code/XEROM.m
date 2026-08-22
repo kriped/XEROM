@@ -177,9 +177,15 @@ C31 = diag(gammaX/NU *PHID_F_PHI./PHID_PHI-sigmaX*X)
 fprintf("Printing second xenon absorption term \n")
 C32 = lambdaI;
 C33 = diag(-lambdaX-sigmaX.*P2)
+C11 = reshape(C11,1,10);
+C13 = reshape(C13,1,10);
+C22 = repelem(C22,10);
+C31 = reshape(C31,1,10);
+C32 = repelem(C32,10);
+C33 = reshape(C33,1,10);
 save(RESULTS_REFINEMENT1_dir+"PARAMETERS_data.mat","PHID_GAMMAI_PHI","PHID_GAMMAX_PHI","PHID_PHI","PHID_PHI","PHID_F_PHI","PHID_FB_PHI","PHID_X0_PHI","PHID_V_PHI","PHID_PHIUPPER_PHI","PHID_PHILOWER_PHI","LAMBDA","M","keff","K_VALUE")
-save(RESULTS_REFINEMENT1_dir+"COUPLING_data.mat","FB_norm","P1_norm","X_norm","P2_norm","C11","C13","C21","C22","C31","C33","temp_X0_PHI","temp_PHILOWER_PHI","temp_PHIUPPER_PHI","PHID_PHI","PHID_F_PHI","MOD","MOD_adj","LAMBDA")
-save(RESULTS_REFINEMENT1_dir+"ANALYTICAL_COEF.mat","C11","C13","C21","C22","C31","C33")
+save(RESULTS_REFINEMENT1_dir+"COUPLING_data.mat","FB_norm","P1_norm","X_norm","P2_norm","C11","C13","C21","C22","C31","C32","C33","temp_X0_PHI","temp_PHILOWER_PHI","temp_PHIUPPER_PHI","PHID_PHI","PHID_F_PHI","MOD","MOD_adj","LAMBDA")
+save(RESULTS_REFINEMENT1_dir+"ANALYTICAL_COEF.mat","C11","C13","C21","C22","C31","C32","C33")
 %% clear temp variables
 clearvars temp*
 %%
@@ -218,6 +224,6 @@ clearvars temp*
 if ~exist(RESULTS_REFINEMENT1_dir,"dir")
     mkdir(RESULTS_REFINEMENT1_dir)
 end
-save(RESULTS_REFINEMENT1_dir+"RESULTS_HET.mat","state_values_2G","time_2G","X0","I0")
+save(RESULTS_REFINEMENT1_dir+"RESULTS_HET.mat","state_values_2G","time_2G","X0","I0","intial_AO")
 
 end

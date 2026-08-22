@@ -3,7 +3,7 @@
 % It performs the following tasks:
 
 % 1. Sets options for data processing, including fitting parameters and plotting options.
-BURNUP = "MOC";
+BURNUP = "UNSTABLE";                                                                                                                                                              
 CASE   = "R4C38";
 opts_path = fullfile("C:\Users\amand\Documents\Kristoffer\XEROM\input",CASE,BURNUP,"Refinement1/");
 addpath(opts_path);
@@ -40,15 +40,15 @@ data        = preparePowerComparison(data,opts);
 %% 9. Prepares data for AO comparisons. 
 fprintf("Now running prepareAOComparison.m\n")
 data        = prepareAOComparison(data,opts);
-%% 10. Prepares data for mode comparisons.
-fprintf("Now running prepareModeComparison.m\n")
-data        = prepareModeComparison(data,opts);
-%% 11. Prepares data for Iodineand Xenon plotting.
+% %% 10. Prepares data for mode comparisons.
+% fprintf("Now running prepareModeComparison.m\n")
+% data        = prepareModeComparison(data,opts);
+%% 11. Prepares data for Iodine and Xenon plotting.
 fprintf("Now running prepareIodineXenoncomparison\n")
 data        = prepareIodineXenoncomparison(data,opts);
-%% 12. Generates plots for all modes
-fprintf("Now running modeComparisonPlot.m\n")
-modeComparisonPlot(data,outputDir,opts);
+% %% 12. Generates plots for all modes
+% fprintf("Now running modeComparisonPlot.m\n")
+% modeComparisonPlot(data,outputDir,opts);
 %% 13. Generates Plots for Power comparison
 fprintf("Now running powerComparisonPlot.m\n")
 powerComparisonPlot(data,outputDir,opts);

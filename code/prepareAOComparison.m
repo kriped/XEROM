@@ -1,25 +1,20 @@
 function data = prepareAOComparison(data,opts)
-
-
     %Extract data
     X   = data.xerom.AO;
     R   = data.mscnpp.AO;
     tX  = data.xerom.reduced_time_hours;
     tR  = data.mscnpp.t_hours;
+    skip_end_mscnpp = 90;
 
     % Output arrays
-    %data.AOplotting.AO_xerom  = zeros(size(X));
-    %data.AOplotting.AO_mscnpp = zeros(size(R));
-    %data.AOplotting.xerom_t   = zeros(size(X));
-    %data.AOplotting.mscnpp_t  = zeros(size(R));
-    extra_skip = 25;
-    tx_skip = tX(opts.skip_xerom+1);
+    extra_skip = 60;
+    tx_skip = tX(opts.skip_xerom);
     tr_skip = tR(opts.skip_mscnpp+extra_skip);
-    tx_seg  = tX(opts.skip_xerom+1:end) - tx_skip;
-    tr_seg  = tR(opts.skip_mscnpp+extra_skip:end) - tr_skip;
-    r_seg = R(opts.skip_mscnpp+extra_skip:end);
+    tx_seg  = tX(opts.skip_xerom:end) - tx_skip;
+    tr_seg  = tR(opts.skip_mscnpp+extra_skip:end-skip_end_mscnpp) - tr_skip;
+    r_seg = R(opts.skip_mscnpp+extra_skip:end-skip_end_mscnpp);
     r_seg = r_seg - mean(r_seg);
-    x_seg = X(opts.skip_xerom+1:end);
+    x_seg = X(opts.skip_xerom:end);
 
     %x_seg = X(opts.skip_xerom+1:end);
     r_detrendResults = detrend(tr_seg,r_seg,opts.AOfit_mscnpp);
@@ -34,6 +29,7 @@ function data = prepareAOComparison(data,opts)
     r_seg = r_detrendResults.detrended; % Store the detrended segment for further processing
     x_detrendResults = detrend(tx_seg,x_seg,opts.AOfit_xerom);
     x_seg = x_detrendResults.detrended;
+  
 
     [x_seg, tx_seg, r_seg, tr_seg] = alignModes(x_seg, tx_seg, r_seg, tr_seg, ...
                                                 opts.AOplot.n_peak_xerom, opts.AOplot.n_peak_mscnpp);
@@ -57,7 +53,11 @@ function data = prepareAOComparison(data,opts)
     data.AOplotting.mscnpp_t    = tr_seg;
     data.AOfit.xerom_frequency  = x_detrendResults.frequency;
     data.AOfit.xerom_alpha      = x_detrendResults.alpha;
+    data.AOfit.xerom_amplitude  = x_detrendResults.amplitude;
+    data.AOfit.xerom_phase      = x_detrendResults.phase;
     data.AOfit.mscnpp_frequency = r_detrendResults.frequency;
     data.AOfit.mscnpp_alpha     = r_detrendResults.alpha;
+    data.AOfit.mscnpp_amplitude = r_detrendResults.amplitude;
+    data.AOfit.mscnpp_phase     = r_detrendResults.phase;
 end
 
